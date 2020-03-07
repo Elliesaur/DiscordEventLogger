@@ -19,6 +19,6 @@
     "include": [
         "src/**/*",
         "index.ts",
-        "config.ts"
+        "Config.ts"
     ]
 }

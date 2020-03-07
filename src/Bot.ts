@@ -14,7 +14,8 @@ import {
     TextChannel,
 } from 'discord.js';
 import logs from 'discord-logs';
-import Config from '../config';
+import Config from '../Config';
+import GuildEventConfig from '../GuildEventConfig';
 
 const client = new Client();
 logs(client);
@@ -32,16 +33,19 @@ class Bot {
         return str.replace(/`/g, '');
     }
 
-    private logMessage(message: string, guild: Guild) {
-        const channel: TextChannel = < TextChannel > guild.channels.cache.find(channel => channel.name === "event_log");
-        if (!!channel) {
-            channel.send(message);
+    private logMessage(event: string, message: string, guild: Guild) {
+        const guildConfig = GuildEventConfig.find(config => config.id === guild.id);
+        if (!!guildConfig && guildConfig.events.includes(event)) {
+            const channel: TextChannel = < TextChannel > guild.channels.cache.find(channel => channel.id === guildConfig.logChannelId);
+            if (!!channel) {
+                channel.send(message);
+            }
         }
     }
 
-    private logMessageToMultiple(message: string, guilds: Guild[]) {
+    private logMessageToMultiple(event: string, message: string, guilds: Guild[]) {
         for (const guild of guilds) {
-            this.logMessage(message, guild);
+            this.logMessage(event, message, guild);
         }
     }
 
@@ -68,152 +72,162 @@ class Bot {
 
     public start() {
         client.on("guildChannelPermissionsChanged", (channel: GuildChannel, oldPermissions: Permissions, newPermissions: Permissions) => {
-            this.logMessage(channel.name + "'s permissions changed!", channel.guild);
+            this.logMessage('guildChannelPermissionsChanged', channel.name + "'s permissions changed!", channel.guild);
         });
 
         client.on("unhandledGuildChannelUpdate", (oldChannel: GuildChannel, newChannel: GuildChannel) => {
-            // this.logMessage("Channel '" + oldChannel.id + "' was edited but discord-logs couldn't find what was updated...", oldChannel.guild);
+            this.logMessage('unhandledGuildChannelUpdate', "Channel '" + oldChannel.id + "' was edited but discord-logs couldn't find what was updated...", oldChannel.guild);
         });
 
         client.on("guildMemberBoost", (member: GuildMember) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) has started boosting ${member.guild.name}`, member.guild);
+            this.logMessage('guildMemberBoost', `<@${member.user.id}> (${member.user.tag}) has started boosting ${member.guild.name}`, member.guild);
         });
 
-        client.on("guildMemberBoost", (member: GuildMember) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) has stopped boosting ${member.guild.name}...`, member.guild);
+        client.on("guildMemberUnboost", (member: GuildMember) => {
+            this.logMessage('guildMemberUnboost', `<@${member.user.id}> (${member.user.tag}) has stopped boosting ${member.guild.name}...`, member.guild);
         });
 
         client.on("guildMemberRoleAdd", (member: GuildMember, role: Role) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) acquired the role: ${role.name}`, member.guild);
+            this.logMessage('guildMemberRoleAdd', `<@${member.user.id}> (${member.user.tag}) acquired the role: ${role.name}`, member.guild);
         });
 
         client.on("guildMemberRoleRemove", (member: GuildMember, role: Role) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) lost the role: ${role.name}`, member.guild);
+            this.logMessage('guildMemberRoleRemove', `<@${member.user.id}> (${member.user.tag}) lost the role: ${role.name}`, member.guild);
         });
 
         client.on("guildMemberNicknameUpdate", (member: GuildMember, oldNickname: string, newNickname: string) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag})'s nickname was ${oldNickname} and is now ${newNickname}`, member.guild);
+            this.logMessage('guildMemberNicknameUpdate', `<@${member.user.id}> (${member.user.tag})'s nickname was ${oldNickname} and is now ${newNickname}`, member.guild);
         });
 
         client.on("unhandledGuildMemberUpdate", (oldMember: GuildMember, newMember: GuildMember) => {
-            // this.logMessage("Member '" + oldMember.id + "' was edited but discord-logs couldn't find what was updated...", oldMember.guild);
+            this.logMessage('unhandledGuildMemberUpdate', `<@${oldMember.user.id}> (${oldMember.user.tag}) was edited but the update was not known`, oldMember.guild);
         });
 
         client.on("guildBoostLevelUp", (guild: Guild, oldLevel: number, newLevel: number) => {
-            this.logMessage(guild.name + " reaches the boost level: " + newLevel, guild);
+            this.logMessage('guildBoostLevelUp', guild.name + " reaches the boost level: " + newLevel, guild);
         });
 
         client.on("guildBoostLevelDown", (guild: Guild, oldLevel: number, newLevel: number) => {
-            this.logMessage(guild.name + " returned to the boost level: " + newLevel, guild);
+            this.logMessage('guildBoostLevelDown', guild.name + " returned to the boost level: " + newLevel, guild);
         });
 
         client.on("guildRegionUpdate", (guild: Guild, oldRegion: string, newRegion: string) => {
-            this.logMessage(guild.name + " region is now " + newRegion, guild);
+            this.logMessage('guildRegionUpdate', guild.name + " region is now " + newRegion, guild);
         });
 
         client.on("guildBannerAdd", (guild: Guild, bannerURL: string) => {
-            this.logMessage(guild.name + " has a banner now!", guild);
+            this.logMessage('guildBannerAdd', guild.name + " has a banner now!", guild);
         });
 
         client.on("guildAfkChannelAdd", (guild: Guild, afkChannel: GuildChannel) => {
-            this.logMessage(guild.name + " has an AFK channel now!", guild);
+            this.logMessage('guildAfkChannelAdd', guild.name + " has an AFK channel now!", guild);
         });
 
         client.on("guildVanityURLAdd", (guild: Guild, vanityURL: string) => {
-            this.logMessage(guild.name + " has added a vanity url : " + vanityURL, guild);
+            this.logMessage('guildVanityURLAdd', guild.name + " has added a vanity url : " + vanityURL, guild);
         });
 
         client.on("unhandledGuildUpdate", (oldGuild: Guild, newGuild: Guild) => {
-            // this.logMessage("Guild '" + oldGuild.id + "' was edited but discord-logs couldn't find what was updated...", oldGuild);
+            this.logMessage('unhandledGuildUpdate', "Guild '" + oldGuild.name + "' was edited but the changes were not known", oldGuild);
         });
 
         client.on("messagePinned", (message: Message) => {
             const channelName = ( < any > message.channel).name;
-            this.logMessage(`Message https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id} has been pinned to ${channelName}: ${this.safe(message.cleanContent)}`, message.guild);
+            this.logMessage('messagePinned', `Message https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id} has been pinned to ${channelName}: \`\`\`${this.safe(message.cleanContent)}\`\`\``, message.guild);
         });
 
         client.on("messageContentEdited", (message: Message, oldContent: string, newContent: string) => {
-            this.logMessage(`Message https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id} has been edited from ${this.safe(oldContent)} to ${this.safe(newContent)}`, message.guild);
+            this.logMessage('messageContentEdited', `Message https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id} has been edited from \`\`\`${this.safe(oldContent)}\`\`\` to \`\`\`${this.safe(newContent)}\`\`\``, message.guild);
         });
 
         client.on("unhandledMessageUpdate", (oldMessage: Message, newMessage: Message) => {
-            // this.logMessage("Message '" + oldMessage.id + "' was edited but discord-logs couldn't find what was updated...", oldMessage.guild);
+            this.logMessage('unhandledMessageUpdate', `Message https://discordapp.com/channels/${oldMessage.guild.id}/${oldMessage.channel.id}/${oldMessage.id} was updated but the changes were not known` , oldMessage.guild);
         });
 
         client.on("guildMemberOffline", (member: GuildMember, oldStatus: Status) => {
-            // this.logMessage(`<@${member.user.id}> (${member.user.tag}) became offline`, member.guild);
+            this.logMessage('guildMemberOffline', `<@${member.user.id}> (${member.user.tag}) became offline`, member.guild);
         });
 
         client.on("guildMemberOnline", (member: GuildMember, newStatus: Status) => {
-            // this.logMessage(`<@${member.user.id}> (${member.user.tag}) was offline and is now ${newStatus}`, member.guild);
+            this.logMessage('guildMemberOnline', `<@${member.user.id}> (${member.user.tag}) was offline and is now ${newStatus}`, member.guild);
         });
 
         client.on("unhandledPresenceUpdate", (oldPresence: Presence, newPresence: Presence) => {
-            // this.logMessage("Presence for member " + oldPresence.member.user.tag + "' was updated but discord-logs couldn't find what was updated...", oldPresence.guild);
+            this.logMessage('unhandledPresenceUpdate', `Presence for member <@${oldPresence.user.id}> (${oldPresence.user.tag}) was updated but the changes were not known`, oldPresence.guild);
         });
 
         client.on("rolePositionUpdate", (role: Role, oldPosition: number, newPosition: number) => {
-            // this.logMessage(role.name + " was at position " + oldPosition + " and now is at position " + newPosition, role.guild);
+            this.logMessage('rolePositionUpdate', role.name + " was at position " + oldPosition + " and now is at position " + newPosition, role.guild);
         });
 
         client.on("unhandledRoleUpdate", (oldRole: Role, newRole: Role) => {
-            // this.logMessage("Role '" + oldRole.id + "' was updated but discord-logs couldn't find what was updated...", oldRole.guild);
+            this.logMessage('unhandledRoleUpdate', "Role '" + oldRole.name + "' was updated but the changes were not nknown", oldRole.guild);
         });
 
         client.on("userAvatarUpdate", (user: User, oldAvatarURL: string, newAvatarURL: string) => {
             this.findGuildsForUser(user).then(guilds => {
-                this.logMessageToMultiple(`<@${user.id}> (${user.tag}) avatar changed from ${oldAvatarURL} to ${newAvatarURL}`, guilds);
+                this.logMessageToMultiple('userAvatarUpdate', `<@${user.id}> (${user.tag}) avatar changed from ${oldAvatarURL} to ${newAvatarURL}`, guilds);
             })
         });
 
         client.on("userUsernameUpdate", (user: User, oldUsername: string, newUsername: string) => {
             this.findGuildsForUser(user).then(guilds => {
-                this.logMessageToMultiple(`<@${user.id}> (${user.tag}) username changed from '${oldUsername}' to '${newUsername}'`, guilds);
+                this.logMessageToMultiple('userUsernameUpdate', `<@${user.id}> (${user.tag}) username changed from '${oldUsername}' to '${newUsername}'`, guilds);
             });
         });
 
         client.on("unhandledUserUpdate", (oldUser: User, newUser: User) => {
-            // this.logMessage("User '" + oldUser.id + "' was updated but discord-logs couldn't find what was updated...", ( < any > client.guilds).first());
+            this.findGuildsForUser(newUser).then(guilds => {
+                this.logMessageToMultiple('unhandledUserUpdate', `User <@${newUser.id}> (${newUser.tag}) was updated but the changes were not known`, guilds);
+            });
         });
 
         client.on("voiceChannelJoin", (member: GuildMember, channel: VoiceChannel) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) joined voice channel '${channel.name}'`, member.guild);
+            this.logMessage('voiceChannelJoin', `<@${member.user.id}> (${member.user.tag}) joined voice channel '${channel.name}'`, member.guild);
         });
 
         client.on("voiceChannelLeave", (member: GuildMember, channel: VoiceChannel) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) left voice channel '${channel.name}'`, member.guild);
+            this.logMessage('voiceChannelLeave', `<@${member.user.id}> (${member.user.tag}) left voice channel '${channel.name}'`, member.guild);
         });
 
         client.on("voiceChannelSwitch", (member: GuildMember, oldChannel: VoiceChannel, newChannel: VoiceChannel) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) left voice channel '${oldChannel.name}' and joined voice channel '${newChannel.name}'`, member.guild);
+            this.logMessage('voiceChannelSwitch', `<@${member.user.id}> (${member.user.tag}) left voice channel '${oldChannel.name}' and joined voice channel '${newChannel.name}'`, member.guild);
         });
 
         client.on("voiceChannelMute", (member: GuildMember, muteType: string) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) is now ${muteType}`, member.guild);
+            this.logMessage('voiceChannelMute', `<@${member.user.id}> (${member.user.tag}) is now ${muteType}`, member.guild);
         });
 
         client.on("voiceChannelDeaf", (member: GuildMember, deafType: string) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) is now ${deafType}`, member.guild);
+            this.logMessage('voiceChannelDeaf', `<@${member.user.id}> (${member.user.tag}) is now ${deafType}`, member.guild);
+        });
+
+        client.on("voiceChannelUnmute", (member: GuildMember, muteType: string) => {
+            this.logMessage('voiceChannelUnmute', `<@${member.user.id}> (${member.user.tag}) is now unmuted`, member.guild);
+        });
+
+        client.on("voiceChannelUndeaf", (member: GuildMember, deafType: string) => {
+            this.logMessage('voiceChannelUndeaf', `<@${member.user.id}> (${member.user.tag}) is now undeafened`, member.guild);
         });
 
         client.on("voiceStreamingStart", (member: GuildMember, voiceChannel: VoiceChannel) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) started streaming in ${voiceChannel.name}`, member.guild);
+            this.logMessage('voiceStreamingStart',`<@${member.user.id}> (${member.user.tag}) started streaming in ${voiceChannel.name}`, member.guild);
         });
 
         client.on("voiceStreamingStop", (member: GuildMember, voiceChannel: VoiceChannel) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) stopped streaming`, member.guild);
+            this.logMessage('voiceStreamingStop', `<@${member.user.id}> (${member.user.tag}) stopped streaming`, member.guild);
         });
 
         client.on("unhandledRoleUpdate", (oldState: VoiceState, newState: VoiceState) => {
-            // this.logMessage("Voice state for member '" + oldState.member.user.tag + "' was updated but discord-logs couldn't find what was updated...", oldState.guild);
+             this.logMessage('unhandledRoleUpdate', `Voice state for member <@${oldState.member.user.id}> (${oldState.member.user.tag}) was updated but the changes were not known`, oldState.guild);
         });
 
         client.on("guildMemberAdd", (member) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) has joined`, member.guild);
+            this.logMessage('guildMemberAdd', `<@${member.user.id}> (${member.user.tag}) has joined`, member.guild);
         });
 
         client.on("guildMemberRemove", (member) => {
-            this.logMessage(`<@${member.user.id}> (${member.user.tag}) has joined`, member.guild);
+            this.logMessage('guildMemberRemove', `<@${member.user.id}> (${member.user.tag}) has joined`, member.guild);
         });
 
         client.on("messageDelete", (message) => {
@@ -223,11 +237,11 @@ class Bot {
                 attachmentUrl = message.attachments.first().proxyURL;
             }
             const channelName = ( < any > message.channel).name;
-            this.logMessage(`<@${message.author.id}> (${message.author.tag})'s message \`\`\`${this.safe(message.cleanContent)}\`\`\` ${(hasAttachment ? ' with attachment ' + attachmentUrl : '')} from ${channelName} was deleted`, message.guild);
+            this.logMessage('messageDelete', `<@${message.author.id}> (${message.author.tag})'s message \`\`\`${this.safe(message.cleanContent)}\`\`\` ${(hasAttachment ? ' with attachment ' + attachmentUrl : '')} from ${channelName} was deleted`, message.guild);
         });
 
         client.on("messageDeleteBulk", (messages) => {
-            this.logMessage(`${messages.keys.length} messages were deleted.`, messages.first().guild);
+            this.logMessage('messageDeleteBulk', `${messages.keys.length} messages were deleted.`, messages.first().guild);
         });
 
         client.on('ready', () => {
