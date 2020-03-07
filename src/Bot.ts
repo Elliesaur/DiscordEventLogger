@@ -15,7 +15,6 @@ import {
 } from 'discord.js';
 import logs from 'discord-logs';
 import Config from '../config';
-import { resolve } from 'dns';
 
 const client = new Client();
 logs(client);
@@ -154,7 +153,7 @@ class Bot {
         });
 
         client.on("rolePositionUpdate", (role: Role, oldPosition: number, newPosition: number) => {
-            this.logMessage(role.name + " was at position " + oldPosition + " and now is at position " + newPosition, role.guild);
+            // this.logMessage(role.name + " was at position " + oldPosition + " and now is at position " + newPosition, role.guild);
         });
 
         client.on("unhandledRoleUpdate", (oldRole: Role, newRole: Role) => {
@@ -237,7 +236,6 @@ class Bot {
 
         client.login(Config.BotToken);
     }
-
 }
 
 export = new Bot();
