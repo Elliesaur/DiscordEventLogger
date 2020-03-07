@@ -218,8 +218,8 @@ class Bot {
             this.logMessage('voiceStreamingStop', `<@${member.user.id}> (${member.user.tag}) stopped streaming`, member.guild);
         });
 
-        client.on("unhandledRoleUpdate", (oldState: VoiceState, newState: VoiceState) => {
-             this.logMessage('unhandledRoleUpdate', `Voice state for member <@${oldState.member.user.id}> (${oldState.member.user.tag}) was updated but the changes were not known`, oldState.guild);
+        client.on("unhandledVoiceStateUpdate", (oldState: VoiceState, newState: VoiceState) => {
+             this.logMessage('unhandledVoiceUpdate', `Voice state for member <@${oldState.member.user.id}> (${oldState.member.user.tag}) was updated but the changes were not known`, oldState.guild);
         });
 
         client.on("guildMemberAdd", (member) => {

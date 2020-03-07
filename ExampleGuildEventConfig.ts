@@ -36,6 +36,16 @@ const GuildEventConfig = [
             'guildMemberRemove',
             'messageDelete',
             'messageDeleteBulk',
+            'rolePositionUpdate',
+            'guildMemberOffline',
+            'guildMemberOnline',
+            'unhandledRoleUpdate',
+            'unhandledUserUpdate',
+            'unhandledVoiceStateUpdate',
+            'unhandledMessageUpdate',
+            'unhandledPresenceUpdate',
+            'unhandledGuildChannelUpdate',
+            'unhandledGuildMemberUpdate',
         ]
     },
     {
