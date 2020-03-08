@@ -78,8 +78,7 @@ class Bot {
         if (!!guildConfig && !!guildConfig.eventActions) {
             const action = guildConfig.eventActions.find(action => action.eventName == event);
             if (!!action) {
-                let calls = EventActioner.parse(action.actionCode);
-                EventActioner.execute(calls, guild, memberUser);
+                EventActioner.interpretJs(action.actionCode, guild, memberUser)
             }
         }
     }
