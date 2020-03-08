@@ -66,6 +66,7 @@ const GuildEventConfig = [
                     log(message ? message : '');
                     `,
             }
+        ]
     },
     {
         id: '1234',
