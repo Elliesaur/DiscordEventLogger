@@ -75,10 +75,12 @@ class Bot {
 
     private executeCustomActions(event: string, guild: Guild, memberUser: any) {
         const guildConfig = GuildEventConfig.find(config => config.id === guild.id);
-        if (!!guildConfig) {
+        if (!!guildConfig && !!guildConfig.eventActions) {
             const action = guildConfig.eventActions.find(action => action.eventName == event);
-            let calls = EventActioner.parse(action.actionCode);
-            EventActioner.execute(calls, guild, memberUser);
+            if (!!action) {
+                let calls = EventActioner.parse(action.actionCode);
+                EventActioner.execute(calls, guild, memberUser);
+            }
         }
     }
 
