@@ -46,7 +46,26 @@ const GuildEventConfig = [
             'unhandledPresenceUpdate',
             'unhandledGuildChannelUpdate',
             'unhandledGuildMemberUpdate',
-        ]
+        ],
+        eventActions: [
+            {
+                eventName: 'guildMemberNicknameUpdate',
+                actionCode: 
+                    `log(member ? member : '');
+                    log(user ? user : '');
+                    log(guild ? guild : '');
+                    `,
+            },
+            {
+                eventName: 'messageContentEdited',
+                actionCode: 
+                    `log(member ? member : '');
+                    log(channel ? channel : '');
+                    log(user ? user : '');
+                    log(guild ? guild : '');
+                    log(message ? message : '');
+                    `,
+            }
     },
     {
         id: '1234',
