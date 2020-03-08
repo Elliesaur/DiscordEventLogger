@@ -367,7 +367,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: <any>member,
             });
-            this.logMessage('guildMemberRemove', `<@${member.user.id}> (${member.user.tag}) has joined`, member.guild);
+            this.logMessage('guildMemberRemove', `<@${member.user.id}> (${member.user.tag}) has left/been kicked or banned`, member.guild);
         });
 
         client.on("messageDelete", (message) => {
