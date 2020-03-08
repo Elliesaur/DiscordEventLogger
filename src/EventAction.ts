@@ -49,7 +49,7 @@ export default class EventActioner {
         let interp = new JSInterpreter.Interpreter(code, (i, g) => EventActioner.initFunction(i, g, functions));
         
         // Returns false if all good, true if there's async code.
-        if (!!interp.run()) {
+        if (interp.run()) {
             console.error('Unexpected async function blocking call.', code);
         }
     }
