@@ -105,7 +105,7 @@ class Bot {
         client.on("guildMemberBoost", (member: GuildMember) => {
             this.executeCustomActions('guildMemberBoost', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
             });
             this.logMessage('guildMemberBoost', `<@${member.user.id}> (${member.user.tag}) has started boosting ${member.guild.name}`, member.guild);
         });
@@ -113,7 +113,7 @@ class Bot {
         client.on("guildMemberUnboost", (member: GuildMember) => {
             this.executeCustomActions('guildMemberUnboost', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
             });
             this.logMessage('guildMemberUnboost', `<@${member.user.id}> (${member.user.tag}) has stopped boosting ${member.guild.name}...`, member.guild);
         });
@@ -121,7 +121,7 @@ class Bot {
         client.on("guildMemberRoleAdd", (member: GuildMember, role: Role) => {
             this.executeCustomActions('guildMemberRoleAdd', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
                 role: role,
             });
             this.logMessage('guildMemberRoleAdd', `<@${member.user.id}> (${member.user.tag}) acquired the role: ${role.name}`, member.guild);
@@ -130,7 +130,7 @@ class Bot {
         client.on("guildMemberRoleRemove", (member: GuildMember, role: Role) => {
             this.executeCustomActions('guildMemberRoleRemove', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
                 role: role,
             });
             this.logMessage('guildMemberRoleRemove', `<@${member.user.id}> (${member.user.tag}) lost the role: ${role.name}`, member.guild);
@@ -139,7 +139,7 @@ class Bot {
         client.on("guildMemberNicknameUpdate", (member: GuildMember, oldNickname: string, newNickname: string) => {
             this.executeCustomActions('guildMemberNicknameUpdate', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
             });
             this.logMessage('guildMemberNicknameUpdate', `<@${member.user.id}> (${member.user.tag})'s nickname was ${oldNickname} and is now ${newNickname}`, member.guild);
         });
@@ -212,7 +212,7 @@ class Bot {
         client.on("guildMemberOffline", (member: GuildMember, oldStatus: Status) => {
             this.executeCustomActions('guildMemberOffline', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
             });
             this.logMessage('guildMemberOffline', `<@${member.user.id}> (${member.user.tag}) became offline`, member.guild);
         });
@@ -220,7 +220,7 @@ class Bot {
         client.on("guildMemberOnline", (member: GuildMember, newStatus: Status) => {
             this.executeCustomActions('guildMemberOnline', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
             });
             this.logMessage('guildMemberOnline', `<@${member.user.id}> (${member.user.tag}) was offline and is now ${newStatus}`, member.guild);
         });
@@ -276,7 +276,7 @@ class Bot {
         client.on("voiceChannelJoin", (member: GuildMember, channel: VoiceChannel) => {
             this.executeCustomActions('voiceChannelJoin', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
                 channel: channel,
             });
             this.logMessage('voiceChannelJoin', `<@${member.user.id}> (${member.user.tag}) joined voice channel '${channel.name}'`, member.guild);
@@ -285,7 +285,7 @@ class Bot {
         client.on("voiceChannelLeave", (member: GuildMember, channel: VoiceChannel) => {
             this.executeCustomActions('voiceChannelLeave', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
                 channel: channel,
             });
             this.logMessage('voiceChannelLeave', `<@${member.user.id}> (${member.user.tag}) left voice channel '${channel.name}'`, member.guild);
@@ -294,7 +294,7 @@ class Bot {
         client.on("voiceChannelSwitch", (member: GuildMember, oldChannel: VoiceChannel, newChannel: VoiceChannel) => {
             this.executeCustomActions('voiceChannelSwitch', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
                 channel: newChannel,
             });
             this.logMessage('voiceChannelSwitch', `<@${member.user.id}> (${member.user.tag}) left voice channel '${oldChannel.name}' and joined voice channel '${newChannel.name}'`, member.guild);
@@ -303,7 +303,7 @@ class Bot {
         client.on("voiceChannelMute", (member: GuildMember, muteType: string) => {
             this.executeCustomActions('voiceChannelMute', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
             });
             this.logMessage('voiceChannelMute', `<@${member.user.id}> (${member.user.tag}) is now ${muteType}`, member.guild);
         });
@@ -311,7 +311,7 @@ class Bot {
         client.on("voiceChannelDeaf", (member: GuildMember, deafType: string) => {
             this.executeCustomActions('voiceChannelDeaf', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
             });
             this.logMessage('voiceChannelDeaf', `<@${member.user.id}> (${member.user.tag}) is now ${deafType}`, member.guild);
         });
@@ -319,7 +319,7 @@ class Bot {
         client.on("voiceChannelUnmute", (member: GuildMember, muteType: string) => {
             this.executeCustomActions('voiceChannelUnmute', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
             });
             this.logMessage('voiceChannelUnmute', `<@${member.user.id}> (${member.user.tag}) is now unmuted`, member.guild);
         });
@@ -327,7 +327,7 @@ class Bot {
         client.on("voiceChannelUndeaf", (member: GuildMember, deafType: string) => {
             this.executeCustomActions('voiceChannelUndeaf', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
             });
             this.logMessage('voiceChannelUndeaf', `<@${member.user.id}> (${member.user.tag}) is now undeafened`, member.guild);
         });
@@ -335,7 +335,7 @@ class Bot {
         client.on("voiceStreamingStart", (member: GuildMember, voiceChannel: VoiceChannel) => {
             this.executeCustomActions('voiceStreamingStart', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
                 channel: voiceChannel,
             });
             this.logMessage('voiceStreamingStart',`<@${member.user.id}> (${member.user.tag}) started streaming in ${voiceChannel.name}`, member.guild);
@@ -344,7 +344,7 @@ class Bot {
         client.on("voiceStreamingStop", (member: GuildMember, voiceChannel: VoiceChannel) => {
             this.executeCustomActions('voiceStreamingStop', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: member,
                 channel: voiceChannel,
             });
             this.logMessage('voiceStreamingStop', `<@${member.user.id}> (${member.user.tag}) stopped streaming`, member.guild);
@@ -357,7 +357,7 @@ class Bot {
         client.on("guildMemberAdd", (member) => {
             this.executeCustomActions('guildMemberAdd', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: <any>member,
             });
             this.logMessage('guildMemberAdd', `<@${member.user.id}> (${member.user.tag}) has joined`, member.guild);
         });
@@ -365,7 +365,7 @@ class Bot {
         client.on("guildMemberRemove", (member) => {
             this.executeCustomActions('guildMemberRemove', {
                 guild: member.guild,
-                memberUser: member.user,
+                memberUser: <any>member,
             });
             this.logMessage('guildMemberRemove', `<@${member.user.id}> (${member.user.tag}) has joined`, member.guild);
         });
