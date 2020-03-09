@@ -39,6 +39,8 @@ class InternalConfigDatabase {
             } catch (e) {
                 console.error('getGuildById', e);
                 return undefined;
+            } finally {
+                db.close();
             }
         });
     }
@@ -66,6 +68,8 @@ class InternalConfigDatabase {
             } catch (e) {
                 console.error('addGuildById', e);
                 return undefined;
+            } finally {
+                db.close();
             }
         });
     }
@@ -87,6 +91,8 @@ class InternalConfigDatabase {
             } catch (e) {
                 console.error('updateGuildLogChannelById', e);
                 return undefined;
+            } finally {
+                db.close();
             }
         });
     }
@@ -114,6 +120,8 @@ class InternalConfigDatabase {
             } catch (e) {
                 console.error('getGuildEventsById', e);
                 return [];
+            } finally {
+                db.close();
             }
         });
     }
@@ -139,6 +147,8 @@ class InternalConfigDatabase {
             } catch (e) {
                 console.error('addGuildEventsById', e);
                 return undefined;
+            } finally {
+                db.close();
             }
         });
     }
@@ -162,6 +172,8 @@ class InternalConfigDatabase {
             } catch (e) {
                 console.error('removeGuildEventsById', e);
                 return undefined;
+            } finally {
+                db.close();
             }
         });
     }
@@ -189,6 +201,8 @@ class InternalConfigDatabase {
             } catch (e) {
                 console.error('getGuildEventActionsForEventById', e);
                 return [];
+            } finally {
+                db.close();
             }
         });
     }
@@ -216,6 +230,8 @@ class InternalConfigDatabase {
             } catch (e) {
                 console.error('getGuildEventActionsById', e);
                 return [];
+            } finally {
+                db.close();
             }
         });
     }
@@ -249,6 +265,8 @@ class InternalConfigDatabase {
             } catch (e) {
                 console.error('addGuildEventActionsForEventById', e);
                 return undefined;
+            } finally {
+                db.close();
             }
         });
     }
@@ -275,6 +293,8 @@ class InternalConfigDatabase {
             } catch (e) {
                 console.error('removeGuildEventActionsById', e);
                 return undefined;
+            } finally {
+                db.close();
             }
         });
     }
