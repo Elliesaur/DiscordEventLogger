@@ -2,7 +2,7 @@ import { Guild } from "discord.js";
 import { MongoClient, ObjectId } from "mongodb";
 const connectionUrl = "mongodb://localhost:27017/";
 const dbName = "eventlogger";
-
+export let db = undefined;
 class InternalConfigDatabase {
 
     constructor() {
@@ -24,223 +24,194 @@ class InternalConfigDatabase {
         this.getGuildEventActionsForEventById = this.getGuildEventActionsForEventById.bind(this);
         this.getGuildEventActionsById = this.getGuildEventActionsById.bind(this);
         this.addGuildEventActionsForEventById = this.addGuildEventActionsForEventById.bind(this);
-    }
 
-    public getGuild(guild: Guild): Promise<GuildConfig> {
-        return this.getGuildById(guild.id);
-    }
-
-    public getGuildById(guildId: string): Promise<GuildConfig> {
-        return MongoClient.connect(connectionUrl).then(async db => {
-            const collection = db.db(dbName).collection('eventlogger');
-            try {
-                const v = await collection.findOne({ id: guildId });
-                return v;
-            } catch (e) {
-                console.error('getGuildById', e);
-                return undefined;
-            } finally {
-                db.close();
-            }
+        MongoClient.connect(connectionUrl).then(a => {
+            db = a.db(dbName);
         });
     }
 
-    public getOrAddGuild(guild: Guild): Promise<GuildConfig> {
-        return this.getOrAddGuildById(guild.id);
+    public async getGuild(guild: Guild): Promise<GuildConfig> {
+        return await this.getGuildById(guild.id);
     }
 
-    public getOrAddGuildById(guildId: string): Promise<GuildConfig> {
-        return MongoClient.connect(connectionUrl).then(async db => {
-            const collection = db.db(dbName).collection('eventlogger');
-            try {
-                const v = await collection.findOneAndUpdate({ id: guildId }, {
-                    $setOnInsert: {
-                        id: guildId,
-                        logChannelId: '',
-                        events: [],
-                        eventActions: []
-                    }
-                }, {
-                    upsert: true,
-                    returnOriginal: false,
-                });
-                return v.value;
-            } catch (e) {
-                console.error('addGuildById', e);
-                return undefined;
-            } finally {
-                db.close();
-            }
-        });
+    public async getGuildById(guildId: string): Promise<GuildConfig> {
+        const collection = db.collection('eventlogger');
+        try {
+            const v = await collection.findOne({ id: guildId });
+            return v;
+        } catch (e) {
+            console.error('getGuildById', e);
+            return undefined;
+        }
     }
 
-    public updateGuildLogChannel(guild: Guild, channelId: string) {
-       return this.updateGuildLogChannelById(guild.id, channelId);
+    public async getOrAddGuild(guild: Guild): Promise<GuildConfig> {
+        return await this.getOrAddGuildById(guild.id);
     }
 
-    public updateGuildLogChannelById(guildId: string, channelId: string) {
-        return MongoClient.connect(connectionUrl).then(async db => {
-            const collection = db.db(dbName).collection('eventlogger');
-            try {
-                const v = await collection.findOneAndUpdate({ id: guildId }, {
-                    $set: {
-                        logChannelId: channelId,
-                    }
-                });
-                return v;
-            } catch (e) {
-                console.error('updateGuildLogChannelById', e);
-                return undefined;
-            } finally {
-                db.close();
-            }
-        });
-    }
-
-    public getGuildEvents(guild: Guild): Promise<string[]> {
-        return this.getGuildEventsById(guild.id);
-    }
-
-    public getGuildEventsById(guildId: string): Promise<string[]> {
-        return MongoClient.connect(connectionUrl).then(async db => {
-            const collection = db.db(dbName).collection('eventlogger');
-            try {
-                const results = (await collection.findOne({ id: guildId }))
-                if (results && results.events) {
-                    return results.events;
-                } else {
-                    this.getOrAddGuildById(guildId).then(guildConfig => {
-                        if (guildConfig) {
-                            console.log('Initialized guild', guildId);
-                        }
-                        return [];
-                    })
+    public async getOrAddGuildById(guildId: string): Promise<GuildConfig> {
+        const collection = db.collection('eventlogger');
+        try {
+            const v = await collection.findOneAndUpdate({ id: guildId }, {
+                $setOnInsert: {
+                    id: guildId,
+                    logChannelId: '',
+                    events: [],
+                    eventActions: []
                 }
-                return [];
-            } catch (e) {
-                console.error('getGuildEventsById', e);
-                return [];
-            } finally {
-                db.close();
-            }
-        });
+            }, {
+                upsert: true,
+                returnOriginal: false,
+            });
+            return v.value;
+        } catch (e) {
+            console.error('addGuildById', e);
+            return undefined;
+        }
     }
 
-    public addGuildEvents(guild: Guild, newEvents: string[]) {
-        return this.addGuildEventsById(guild.id, newEvents);
+    public async updateGuildLogChannel(guild: Guild, channelId: string) {
+       return await this.updateGuildLogChannelById(guild.id, channelId);
     }
 
-    public addGuildEventsById(guildId: string, newEvents: string[]) { 
-        return MongoClient.connect(connectionUrl).then(async db => {
-            const collection = db.db(dbName).collection('eventlogger');
-            try {
-                const v = await collection.findOneAndUpdate({ id: guildId }, {
-                    // Avoid dupes.
-                    $addToSet: {
-                        events: {
-                            $each: newEvents
-                        }
-                    }
-                });
-                
-                return v;
-            } catch (e) {
-                console.error('addGuildEventsById', e);
-                return undefined;
-            } finally {
-                db.close();
-            }
-        });
-    }
-
-    public removeGuildEvents(guild: Guild, events: string[]) {
-        return this.removeGuildEventsById(guild.id, events);
-    }
-
-    public removeGuildEventsById(guildId: string, events: string[]) {
-        return MongoClient.connect(connectionUrl).then(async db => {
-            const collection = db.db(dbName).collection('eventlogger');
-            try {
-                const v = await collection.findOneAndUpdate({ id: guildId }, {
-                    $pull: {
-                        events: {
-                            $in: events
-                        }
-                    }
-                });
-                return v;
-            } catch (e) {
-                console.error('removeGuildEventsById', e);
-                return undefined;
-            } finally {
-                db.close();
-            }
-        });
-    }
-
-    public getGuildEventActionsForEvent(guild: Guild, event: string): Promise<GuildEventAction[]> {
-        return this.getGuildEventActionsForEventById(guild.id, event);
-    }
-
-    public getGuildEventActionsForEventById(guildId: string, event: string): Promise<GuildEventAction[]> {
-        return MongoClient.connect(connectionUrl).then(async db => {
-            const collection = db.db(dbName).collection('eventlogger');
-            try {
-                const guildConfig = await collection.findOne({ id: guildId });
-                if (guildConfig && guildConfig.eventActions) {
-                    return guildConfig.eventActions.filter(x => x.event === event);
-                } else {
-                    this.getOrAddGuildById(guildId).then(guildConfig => {
-                        if (guildConfig) {
-                            console.log('Initialized guild', guildId);
-                        }
-                        return [];
-                    })
+    public async updateGuildLogChannelById(guildId: string, channelId: string) {
+        const collection = db.collection('eventlogger');
+        try {
+            const v = await collection.findOneAndUpdate({ id: guildId }, {
+                $set: {
+                    logChannelId: channelId,
                 }
-                return [];
-            } catch (e) {
-                console.error('getGuildEventActionsForEventById', e);
-                return [];
-            } finally {
-                db.close();
+            });
+            return v;
+        } catch (e) {
+            console.error('updateGuildLogChannelById', e);
+            return undefined;
+        }
+    }
+
+    public async getGuildEvents(guild: Guild): Promise<string[]> {
+        return await this.getGuildEventsById(guild.id);
+    }
+
+    public async getGuildEventsById(guildId: string): Promise<string[]> {
+        const collection = db.collection('eventlogger');
+        try {
+            const results = (await collection.findOne({ id: guildId }))
+            if (results && results.events) {
+                return results.events;
+            } else {
+                this.getOrAddGuildById(guildId).then(guildConfig => {
+                    if (guildConfig) {
+                        console.log('Initialized guild', guildId);
+                    }
+                    return [];
+                })
             }
-        });
+            return [];
+        } catch (e) {
+            console.error('getGuildEventsById', e);
+            return [];
+        }
     }
 
-    public getGuildEventActions(guild: Guild): Promise<GuildEventAction[]> {
-        return this.getGuildEventActionsById(guild.id);
+    public async addGuildEvents(guild: Guild, newEvents: string[]) {
+        return await this.addGuildEventsById(guild.id, newEvents);
     }
 
-    public getGuildEventActionsById(guildId: string): Promise<GuildEventAction[]> {
-        return MongoClient.connect(connectionUrl).then(async db => {
-            const collection = db.db(dbName).collection('eventlogger');
-            try {
-                const guildConfig = await collection.findOne({ id: guildId });
-                if (guildConfig && guildConfig.eventActions) {
-                    return guildConfig.eventActions;
-                } else {
-                    this.getOrAddGuildById(guildId).then(guildConfig => {
-                        if (guildConfig) {
-                            console.log('Initialized guild', guildId);
-                        }
-                        return [];
-                    })
+    public async addGuildEventsById(guildId: string, newEvents: string[]) { 
+        const collection = db.collection('eventlogger');
+        try {
+            const v = await collection.findOneAndUpdate({ id: guildId }, {
+                // Avoid dupes.
+                $addToSet: {
+                    events: {
+                        $each: newEvents
+                    }
                 }
-                return [];
-            } catch (e) {
-                console.error('getGuildEventActionsById', e);
-                return [];
-            } finally {
-                db.close();
+            });
+            return v;
+        } catch (e) {
+            console.error('addGuildEventsById', e);
+            return undefined;
+        }
+    }
+
+    public async removeGuildEvents(guild: Guild, events: string[]) {
+        return await this.removeGuildEventsById(guild.id, events);
+    }
+
+    public async removeGuildEventsById(guildId: string, events: string[]) {
+        const collection = db.collection('eventlogger');
+        try {
+            const v = await collection.findOneAndUpdate({ id: guildId }, {
+                $pull: {
+                    events: {
+                        $in: events
+                    }
+                }
+            });
+            return v;
+        } catch (e) {
+            console.error('removeGuildEventsById', e);
+            return undefined;
+        }
+    }
+
+    public async getGuildEventActionsForEvent(guild: Guild, event: string): Promise<GuildEventAction[]> {
+        return await this.getGuildEventActionsForEventById(guild.id, event);
+    }
+
+    public async getGuildEventActionsForEventById(guildId: string, event: string): Promise<GuildEventAction[]> {
+        const collection = db.collection('eventlogger');
+        try {
+            const guildConfig = await collection.findOne({ id: guildId });
+            if (guildConfig && guildConfig.eventActions) {
+                return guildConfig.eventActions.filter(x => x.event === event);
+            } else {
+                this.getOrAddGuildById(guildId).then(guildConfig => {
+                    if (guildConfig) {
+                        console.log('Initialized guild', guildId);
+                    }
+                    return [];
+                })
             }
-        });
+            return [];
+        } catch (e) {
+            console.error('getGuildEventActionsForEventById', e);
+            return [];
+        }
+    }
+
+    public async getGuildEventActions(guild: Guild): Promise<GuildEventAction[]> {
+        return await this.getGuildEventActionsById(guild.id);
+    }
+
+    public async getGuildEventActionsById(guildId: string): Promise<GuildEventAction[]> {
+        const collection = db.collection('eventlogger');
+        try {
+            const guildConfig = await collection.findOne({ id: guildId });
+            if (guildConfig && guildConfig.eventActions) {
+                return guildConfig.eventActions;
+            } else {
+                this.getOrAddGuildById(guildId).then(guildConfig => {
+                    if (guildConfig) {
+                        console.log('Initialized guild', guildId);
+                    }
+                    return [];
+                })
+            }
+            return [];
+        } catch (e) {
+            console.error('getGuildEventActionsById', e);
+            return [];
+        }
     }
     
-    public addGuildEventActionsForEvent(guild: Guild, newEventActions: GuildEventAction[]) {
-        return this.addGuildEventActionsForEventById(guild.id, newEventActions);
+    public async addGuildEventActionsForEvent(guild: Guild, newEventActions: GuildEventAction[]) {
+        return await this.addGuildEventActionsForEventById(guild.id, newEventActions);
     }
 
-    public addGuildEventActionsForEventById(guildId: string, newEventActions: GuildEventAction[]) {
+    public async addGuildEventActionsForEventById(guildId: string, newEventActions: GuildEventAction[]) {
         let modifiedEventActions = newEventActions
             .map(act => {
                 return {
@@ -250,53 +221,45 @@ class InternalConfigDatabase {
             });
             
 
-        return MongoClient.connect(connectionUrl).then(async db => {
-            const collection = db.db(dbName).collection('eventlogger');
-            try {
-                const v = await collection.findOneAndUpdate({ id: guildId }, {
-                    $push: {
-                        eventActions: {
-                            $each: modifiedEventActions
-                        }
+        
+        const collection = db.collection('eventlogger');
+        try {
+            const v = await collection.findOneAndUpdate({ id: guildId }, {
+                $push: {
+                    eventActions: {
+                        $each: modifiedEventActions
                     }
-                });
-                
-                return v;
-            } catch (e) {
-                console.error('addGuildEventActionsForEventById', e);
-                return undefined;
-            } finally {
-                db.close();
-            }
-        });
+                }
+            });
+            
+            return v;
+        } catch (e) {
+            console.error('addGuildEventActionsForEventById', e);
+            return undefined;
+        }
     }
 
-    public removeGuildEventActions(guild: Guild, actionIds: ObjectId[]) {
-        return this.removeGuildEventActionsById(guild.id, actionIds);
+    public async removeGuildEventActions(guild: Guild, actionIds: ObjectId[]) {
+        return await this.removeGuildEventActionsById(guild.id, actionIds);
     }
 
-    public removeGuildEventActionsById(guildId: string, actionIds: ObjectId[]) {
-        // Action id's are the id's done on insert.
-        return MongoClient.connect(connectionUrl).then(async db => {
-            const collection = db.db(dbName).collection('eventlogger');
-            try {
-                const v = await collection.findOneAndUpdate({ id: guildId }, {
-                    $pull: {
-                        eventActions: {
-                            id: {
-                                $in: actionIds
-                            }
+    public async removeGuildEventActionsById(guildId: string, actionIds: ObjectId[]) {
+        const collection = db.collection('eventlogger');
+        try {
+            const v = await collection.findOneAndUpdate({ id: guildId }, {
+                $pull: {
+                    eventActions: {
+                        id: {
+                            $in: actionIds
                         }
                     }
-                });
-                return v;
-            } catch (e) {
-                console.error('removeGuildEventActionsById', e);
-                return undefined;
-            } finally {
-                db.close();
-            }
-        });
+                }
+            });
+            return v;
+        } catch (e) {
+            console.error('removeGuildEventActionsById', e);
+            return undefined;
+        }
     }
 }
 
