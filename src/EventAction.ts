@@ -74,6 +74,7 @@ class InterpreterFunctions {
         this.removeRoleById = this.removeRoleById.bind(this);
         this.toggleRoleById = this.toggleRoleById.bind(this);
         this.messageChannelById = this.messageChannelById.bind(this);
+        this.hasRoleById = this.hasRoleById.bind(this);
     }
 
     public toggleRoleById(id) {
