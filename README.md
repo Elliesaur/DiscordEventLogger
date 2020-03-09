@@ -113,7 +113,7 @@ Code: log('Hello!');
 Adds a single event action to an event, events can have any number of event actions.
 #### Arguments
 - Event name
-- Action Code surrounded by \`\`\` (code block in discord)
+- Action Code (see below) surrounded by \`\`\` (code block in discord)
 #### Example
 User> !addEventAction messageContentEdited 
 ```
@@ -182,3 +182,19 @@ Bot> Successfully removed an event action with identifier 5e6612673d413106515860
 'messageReactionRemoveAll'
 'message'
 ```
+
+---
+
+# Action Code
+Action code makes use of the JS-Interpreter library. This handles ES5 JS only.
+It's quite simple, write your response to an event in JS using functions and variables available to the event.
+
+### Functions Available
+The functions available in the JS Interpreter include those listed in [InterpreterFunctions](https://github.com/Elliesaur/DiscordEventLogger/blob/20cb45af81c238af3f4c7e63fef2e690b54e3f88/src/EventAction.ts#L71) class.
+
+### Global Variables
+The custom global variables will depend on what event was fired.
+For a complete list of when each variable appears check out this [InterpreterOptions](https://github.com/Elliesaur/DiscordEventLogger/blob/20cb45af81c238af3f4c7e63fef2e690b54e3f88/src/EventAction.ts#L169) interface.
+
+
+
