@@ -79,25 +79,46 @@ class InterpreterFunctions {
         this.removeReactionByEmojiName = this.removeReactionByEmojiName.bind(this);
     }
 
+    /**
+     * Toggles a role on and off by the id for the member.
+     * @param id The role ID, a string or number.
+     */
     public toggleRoleById(id) {
         const guildMember = <GuildMember>this.options.memberUser;
         InterpreterFunctions.toggleRole(this.options.guild, id, this.options.memberUser, 
             !!!guildMember.roles.cache.find(role => role.id == id));
     }
 
+    /**
+     * Returns true or false depending on whether the member has the role.
+     * @param id The role ID, a string or number.
+     */
     public hasRoleById(id) {
         const guildMember = <GuildMember>this.options.memberUser;
         return !!guildMember.roles.cache.find(role => role.id == id);
     }
 
+    /**
+     * Adds a role by id to the member.
+     * @param id The role ID, a string or number.
+     */
     public addRoleById(id) {
         InterpreterFunctions.toggleRole(this.options.guild, id, this.options.memberUser, true);
     }
 
+    /**
+     * Removes a role by id to the member.
+     * @param id The role ID, a string or number.
+     */
     public removeRoleById(id) {
         InterpreterFunctions.toggleRole(this.options.guild, id, this.options.memberUser, false);
     }
 
+    /**
+     * Message a specific channel.
+     * @param channelId The channel ID to message, a string or number
+     * @param message The message to transmit. Does not support embeds
+     */
     public messageChannelById(channelId, message) {
         const channel = <TextChannel>this.options.guild.channels.cache.find(chan => chan.id == channelId);
         if (!!channel) {
@@ -105,6 +126,11 @@ class InterpreterFunctions {
         }
     }
 
+    /**
+     * Removes a reaction to the message by the user that the reaction add/remove event was fired from.
+     * This function should only be used in reaction-based events.
+     * @param nameOrEmoji The emoji name for custom emojis or the literal emoji character for regular emojis.
+     */
     public removeReactionByEmojiName(nameOrEmoji) {
         if (!this.options.message || !this.options.message.reactions || !(<any>this.options.memberUser).user) {
             return false;
@@ -141,11 +167,104 @@ class InterpreterFunctions {
 }
 
 export interface InterpreterOptions {
+    /** The guild object, present in
+     * guildMemberBoost
+     * guildMemberUnboost
+     * guildMemberRoleAdd
+     * guildMemberRoleRemove
+     * guildMemberNicknameUpdate
+     * unhandledGuildMemberUpdate
+     * messagePinned
+     * messageContentEdited
+     * unhandledMessageUpdate
+     * guildMemberOffline
+     * guildMemberOnline
+     * unhandledPresenceUpdate
+     * rolePositionUpdate
+     * unhandledRoleUpdate
+     * userAvatarUpdate (USER OBJECT)
+     * userUsernameUpdate (USER OBJECT)
+     * voiceChannelJoin
+     * voiceChannelLeave
+     * voiceChannelSwitch
+     * voiceChannelMute
+     * voiceChannelDeaf
+     * voiceChannelUnmute
+     * voiceChannelUndeaf
+     * voiceStreamingStart
+     * voiceStreamingStop
+     * guildMemberAdd
+     * guildMemberRemove
+     * messageReactionAdd
+     * messageReactionRemove
+     * messageDelete
+     * message
+     */
     guild?: Guild,
+    /** The member or user object, present in
+     * guildMemberBoost
+     * guildMemberUnboost
+     * guildMemberRoleAdd
+     * guildMemberRoleRemove
+     * guildMemberNicknameUpdate
+     * unhandledGuildMemberUpdate
+     * messagePinned
+     * messageContentEdited
+     * unhandledMessageUpdate
+     * guildMemberOffline
+     * guildMemberOnline
+     * unhandledPresenceUpdate
+     * userAvatarUpdate (USER OBJECT)
+     * userUsernameUpdate (USER OBJECT)
+     * voiceChannelJoin
+     * voiceChannelLeave
+     * voiceChannelSwitch
+     * voiceChannelMute
+     * voiceChannelDeaf
+     * voiceChannelUnmute
+     * voiceChannelUndeaf
+     * voiceStreamingStart
+     * voiceStreamingStop
+     * guildMemberAdd
+     * guildMemberRemove
+     * messageReactionAdd (Resolved from User)
+     * messageReactionRemove (Resolved from User)
+     * messageDelete
+     * message
+     */
     memberUser?: GuildMember | User,
+    /** The channel object, present in
+     * messagePinned
+     * messageContentEdited
+     * unhandledMessageUpdate
+     * voiceChannelJoin (Voice Channel)
+     * voiceChannelLeave (Voice Channel)
+     * voiceChannelSwitch (Voice Channel)
+     * voiceStreamingStart (Voice Channel)
+     * voiceStreamingStop (Voice Channel)
+     * messageDelete
+     */
     channel?: any,
+    /** The role object, present in 
+     * guildMemberRoleAdd
+     * guildMemberRoleRemove
+     * rolePositionUpdate
+     * unhandledRoleUpdate
+     * message
+     */
     role?: any,
+    /** The reaction object, present in messageReactionAdd, messageReactionRemove events. */
     reaction?: any,
+    /** The message object, present in 
+     * messagePinned
+     * messageContentEdited
+     * unhandledMessageUpdate
+     * messageReactionAdd (Message reacted to!)
+     * messageReactionRemove (Message reacted to!)
+     * messageDelete
+     * message
+     */
     message?: any,
+    /** The emoji object, present in messageReactionAdd, messageReactionRemove events. */
     emoji?: any,
 }

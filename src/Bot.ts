@@ -236,6 +236,8 @@ class Bot {
             this.executeCustomActions('unhandledMessageUpdate', {
                 guild: newMessage.guild,
                 message: newMessage,
+                memberUser: newMessage.member,
+                channel: newMessage.channel,
             });
             this.logMessage('unhandledMessageUpdate', `Message https://discordapp.com/channels/${oldMessage.guild.id}/${oldMessage.channel.id}/${oldMessage.id} was updated but the changes were not known` , oldMessage.guild);
         });
