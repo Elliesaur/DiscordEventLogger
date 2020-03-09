@@ -409,11 +409,12 @@ class Bot {
                         guild: messageReaction.message.guild,
                         memberUser: <any>firstMember,
                         reaction: messageReaction,
-                        message: messageReaction.message
+                        message: messageReaction.message,
+                        emoji: messageReaction.emoji
                     });
                 }
             });
-            this.logMessage('messageReactionAdd', `<@${user.id}> (${user.tag}) has reacted with ${messageReaction.emoji.url} to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
+            this.logMessage('messageReactionAdd', `<@${user.id}> (${user.tag}) has reacted with ${messageReaction.emoji.name} (${messageReaction.emoji.url}) to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
         });
 
         client.on("messageReactionRemove", (messageReaction, user) => {
@@ -424,11 +425,12 @@ class Bot {
                         guild: messageReaction.message.guild,
                         memberUser: <any>firstMember,
                         reaction: messageReaction,
-                        message: messageReaction.message
+                        message: messageReaction.message,
+                        emoji: messageReaction.emoji
                     });
                 }
             });
-            this.logMessage('messageReactionRemove', `<@${user.id}> (${user.tag}) has removed reaction ${messageReaction.emoji.url} to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
+            this.logMessage('messageReactionRemove', `<@${user.id}> (${user.tag}) has removed reaction ${messageReaction.emoji.name} (${messageReaction.emoji.url}) to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
         });
 
         client.on("messageReactionRemoveAll", (message: Message) => {

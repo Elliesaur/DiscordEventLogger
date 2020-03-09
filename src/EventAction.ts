@@ -122,4 +122,5 @@ export interface InterpreterOptions {
     role?: any,
     reaction?: any,
     message?: any,
+    emoji?: any,
 }
