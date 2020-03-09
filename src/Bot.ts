@@ -15,11 +15,14 @@ import {
 } from 'discord.js';
 import logs from 'discord-logs';
 import Config from '../Config';
-import GuildEventConfig from '../GuildEventConfig';
 import EventActioner, { InterpreterOptions } from './EventAction';
-import { ConfigDatabase } from './ConfigDatabase';
+import { ConfigDatabase, GuildEventAction } from './ConfigDatabase';
+import { ObjectId } from 'mongodb';
 
 const client = new Client();
+const commands = ['events', 'listevents', 'addevents', 'removeevents', 'deleteevents', 
+'addeventaction', 'removeeventaction', 'listeventactions', 'eventactions'];
+
 logs(client);
 
 class Bot {
@@ -99,6 +102,7 @@ class Bot {
     }
     
     public start() {
+
         client.on("guildChannelPermissionsChanged", (channel: GuildChannel, oldPermissions: Permissions, newPermissions: Permissions) => {
             this.logMessage('guildChannelPermissionsChanged', channel.name + "'s permissions changed!", channel.guild);
         });
@@ -375,6 +379,35 @@ class Bot {
             this.logMessage('guildMemberRemove', `<@${member.user.id}> (${member.user.tag}) has left/been kicked or banned`, member.guild);
         });
 
+        client.on("messageReactionAdd", (messageReaction, user) => {
+            this.executeCustomActions('messageReactionAdd', {
+                guild: messageReaction.message.guild,
+                memberUser: <any>user,
+                reaction: messageReaction,
+                message: messageReaction.message
+            });
+            this.logMessage('messageReactionAdd', `<@${user.id}> (${user.tag}) has reacted with ${messageReaction.emoji.url} to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
+        });
+
+        client.on("messageReactionRemove", (messageReaction, user) => {
+            this.executeCustomActions('messageReactionRemove', {
+                guild: messageReaction.message.guild,
+                memberUser: <any>user,
+                reaction: messageReaction,
+                message: messageReaction.message
+            });
+            this.logMessage('messageReactionRemove', `<@${user.id}> (${user.tag}) has removed reaction ${messageReaction.emoji.url} to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
+        });
+
+        client.on("messageReactionRemoveAll", (message: Message) => {
+            this.executeCustomActions('messageReactionRemoveAll', {
+                guild: message.guild,
+                memberUser: message.member,
+                message: message
+            });
+            this.logMessage('messageReactionRemoveAll', `Message https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id} has had all reactions removed`, message.guild);
+        });
+
         client.on("messageDelete", (message) => {
             const hasAttachment = message.attachments.size > 0;
             let attachmentUrl = '';
@@ -387,7 +420,7 @@ class Bot {
                 message: message,
                 channel: message.channel,
                 memberUser: message.member
-            })
+            });
             this.logMessage('messageDelete', `<@${message.author.id}> (${message.author.tag})'s message \`\`\`${this.safe(message.cleanContent)}\`\`\` ${(hasAttachment ? ' with attachment ' + attachmentUrl : '')} from ${channelName} was deleted`, message.guild);
         });
 
@@ -395,7 +428,151 @@ class Bot {
             this.logMessage('messageDeleteBulk', `${messages.keys.length} messages were deleted.`, messages.first().guild);
         });
 
+        client.on("guildCreate", guild => {
+            console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
+            
+            // Start by getting or creating the guild.
+            ConfigDatabase.getOrAddGuild(guild).then(guildConfig => {
+                if (guildConfig.logChannelId === '') {
+                    // New or unset channel.
+                    console.log(`Guild has not been configured with a channel yet.`);
+                }
+            });
+
+            client.user.setActivity(`Serving ${client.guilds.cache.size} servers`);
+        });
+
+        client.on("message", async message => { 
+
+            // Skip itself, do not allow it to process its own messages.
+            if (message.author.id === client.user.id) return;
+
+            // First of all give the details to custom actions and log message.
+            this.executeCustomActions('message', {
+                guild: message.guild,
+                message: message,
+                channel: message.channel,
+                memberUser: message.member
+            });
+            this.logMessage('message', `<@${message.author.id}> (${message.author.tag}) posted message: \`\`\`${this.safe(message.cleanContent)}\`\`\``, message.guild);
+        
+            // Skip other bots now.
+            if (message.author.bot) return;
+
+            // Check for prefix.
+            if (message.content.indexOf('!') !== 0) return;
+
+            const args = message.content.slice(1).trim().split(/ +/g);
+            const command = args.shift().toLowerCase();
+
+            
+            if (command === 'setlogchannel') {
+                if (!message.member.hasPermission("ADMINISTRATOR")) {
+                    return;
+                }
+                let channelMentions = message.mentions.channels;
+                if (channelMentions.size > 0) {
+                    let firstChannel = channelMentions.keys().next().value;
+                    ConfigDatabase.updateGuildLogChannel(message.guild, firstChannel).then(x => {
+                        if (x.ok) {
+                            message.reply(`Set the log channel to ${firstChannel}`);
+                        } else {
+                            message.reply(`Failed to set the log channel to ${firstChannel}`);
+                        }
+                    });
+                }
+            } else if (!commands.includes(command)) {
+                return;
+            }
+
+            // Only allow commands to be executed in the log channel.
+            ConfigDatabase.getOrAddGuild(message.guild).then(guildConfig => {
+                if (message.channel.id !== guildConfig.logChannelId) {
+                    return;
+                }
+
+                if (command === 'addevents') {
+                    let events = args;
+                    if (events.length > 0) {
+                        ConfigDatabase.addGuildEvents(message.guild, events).then(x => {
+                            if (x.ok) {
+                                message.reply(`Successfully added ${events.length} event(s) to be logged.`);
+                            } else {
+                                message.reply(`Failed to add the events.`);
+                            }
+                        });
+                    }
+                }
+
+                if (command === 'removeevents' || command === 'deleteevents') {
+                    let events = args;
+                    if (events.length > 0) {
+                        ConfigDatabase.removeGuildEvents(message.guild, events).then(x => {
+                            if (x.ok) {
+                                message.reply(`Successfully removed ${events.length} event(s) from being logged.`);
+                            } else {
+                                message.reply(`Failed to remove the events.`);
+                            }
+                        });
+                    }
+                }
+
+                if (command === 'events' || command === 'listevents') {
+                    ConfigDatabase.getGuildEvents(message.guild).then(events => {
+                        let formattedEvents = `Actively Logged Events: 
+\`\`\`
+${events.join('\n').trim()}
+\`\`\``;
+                        message.reply(formattedEvents);
+                    });
+                }
+
+                if (command === 'addeventaction' && args.length > 1) {
+                    let [event, ...other] = args;
+                    let code = other.join(' ').replace(/`/g, '');
+                    let action: GuildEventAction = {
+                        event: event,
+                        actionCode: code,
+                    };
+                    ConfigDatabase.addGuildEventActionsForEvent(message.guild, [action]).then(result => {
+                        if (result.ok) {
+                            message.reply('Successfully added an event action.');
+                        } else {
+                            message.reply('Failed to add an event action.');
+                        }
+                    })
+                }
+
+                if (command === 'removeeventaction' && args.length === 1) {
+                    ConfigDatabase.removeGuildEventActions(message.guild, [new ObjectId(args[0])]).then(result => {
+                        if (result.ok) {
+                            message.reply(`Successfully removed an event action with identifier ${args[0]}.`)
+                        } else {
+                            message.reply('Failed to remove an event action with that identifier.');
+                        }
+                    })
+                }
+                
+                if (command === 'listeventactions' || command === 'eventactions') {
+                    ConfigDatabase.getGuildEventActions(message.guild).then(actions => {
+                        let formattedActions = `Event Actions in Place: `;
+                        for (const act of actions) {
+                            formattedActions += `
+\`\`\`
+Identifier: ${act.id.toHexString()}
+Event: ${this.safe(act.event)}
+Code: ${this.safe(act.actionCode)}
+\`\`\``;
+                        }
+                        message.reply(formattedActions);
+                    });
+                }
+            });
+        });
+
         client.on('ready', () => {
+            console.log(`Bot has started, with ${client.users.cache.size} users in cache, in ${client.channels.cache.size} cached channels of ${client.guilds.cache.size} cached guilds.`); 
+            client.user.setActivity(`Serving ${client.guilds.cache.size} servers`);
             console.log(`Logged in as ${client.user.tag}!`);
         });
 

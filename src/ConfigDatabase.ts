@@ -71,7 +71,7 @@ class InternalConfigDatabase {
     }
 
     public updateGuildLogChannel(guild: Guild, channelId: string) {
-       this.updateGuildLogChannelById(guild.id, channelId);
+       return this.updateGuildLogChannelById(guild.id, channelId);
     }
 
     public updateGuildLogChannelById(guildId: string, channelId: string) {
@@ -99,8 +99,18 @@ class InternalConfigDatabase {
         return MongoClient.connect(connectionUrl).then(async db => {
             const collection = db.db(dbName).collection('eventlogger');
             try {
-                const results = (await collection.findOne({ id: guildId })).events;
-                return results;
+                const results = (await collection.findOne({ id: guildId }))
+                if (results && results.events) {
+                    return results.events;
+                } else {
+                    this.getOrAddGuildById(guildId).then(guildConfig => {
+                        if (guildConfig) {
+                            console.log('Initialized guild', guildId);
+                        }
+                        return [];
+                    })
+                }
+                return [];
             } catch (e) {
                 console.error('getGuildEventsById', e);
                 return [];
@@ -117,7 +127,8 @@ class InternalConfigDatabase {
             const collection = db.db(dbName).collection('eventlogger');
             try {
                 const v = await collection.findOneAndUpdate({ id: guildId }, {
-                    $push: {
+                    // Avoid dupes.
+                    $addToSet: {
                         events: {
                             $each: newEvents
                         }
@@ -164,7 +175,17 @@ class InternalConfigDatabase {
             const collection = db.db(dbName).collection('eventlogger');
             try {
                 const guildConfig = await collection.findOne({ id: guildId });
-                return guildConfig.eventActions.filter(x => x.event === event);
+                if (guildConfig && guildConfig.eventActions) {
+                    return guildConfig.eventActions.filter(x => x.event === event);
+                } else {
+                    this.getOrAddGuildById(guildId).then(guildConfig => {
+                        if (guildConfig) {
+                            console.log('Initialized guild', guildId);
+                        }
+                        return [];
+                    })
+                }
+                return [];
             } catch (e) {
                 console.error('getGuildEventActionsForEventById', e);
                 return [];
@@ -181,7 +202,17 @@ class InternalConfigDatabase {
             const collection = db.db(dbName).collection('eventlogger');
             try {
                 const guildConfig = await collection.findOne({ id: guildId });
-                return guildConfig.eventActions;
+                if (guildConfig && guildConfig.eventActions) {
+                    return guildConfig.eventActions;
+                } else {
+                    this.getOrAddGuildById(guildId).then(guildConfig => {
+                        if (guildConfig) {
+                            console.log('Initialized guild', guildId);
+                        }
+                        return [];
+                    })
+                }
+                return [];
             } catch (e) {
                 console.error('getGuildEventActionsById', e);
                 return [];

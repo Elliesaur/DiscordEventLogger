@@ -79,12 +79,12 @@ class InterpreterFunctions {
     public toggleRoleById(id) {
         const guildMember = <GuildMember>this.options.memberUser;
         InterpreterFunctions.toggleRole(this.options.guild, id, this.options.memberUser, 
-            !!!guildMember.roles.cache.find(role => role.id === id));
+            !!!guildMember.roles.cache.find(role => role.id == id));
     }
 
     public hasRoleById(id) {
         const guildMember = <GuildMember>this.options.memberUser;
-        return !!guildMember.roles.cache.find(role => role.id === id);
+        return !!guildMember.roles.cache.find(role => role.id == id);
     }
 
     public addRoleById(id) {
@@ -96,7 +96,7 @@ class InterpreterFunctions {
     }
 
     public messageChannelById(channelId, message) {
-        const channel = <TextChannel>this.options.guild.channels.cache.find(chan => chan.id === channelId);
+        const channel = <TextChannel>this.options.guild.channels.cache.find(chan => chan.id == channelId);
         if (!!channel) {
             channel.send(message);
         }
