@@ -31,6 +31,7 @@ class Bot {
         this.logMessage = this.logMessage.bind(this);
         this.logMessageToMultiple = this.logMessageToMultiple.bind(this);
         this.findGuildsForUser = this.findGuildsForUser.bind(this);
+        this.findMembersForUser = this.findMembersForUser.bind(this);
         this.safe = this.safe.bind(this);
         this.executeCustomActions = this.executeCustomActions.bind(this);
         this.executeMultipleCustomActions = this.executeMultipleCustomActions.bind(this);
@@ -78,6 +79,27 @@ class Bot {
                     }
                 } 
                 resolve(matchedGuilds);
+            }).catch(reject);
+        });
+    }
+
+    private findMembersForUser(user: any, guilds: Guild[]) {
+        return new Promise((resolve, reject) => {
+            let matchedMembers = [];
+            const guilds = client.guilds.cache;
+            const promises = [];
+    
+            for (const guild of guilds) {
+                promises.push(guild[1].members.fetch(user.id))
+            }
+            
+            Promise.all(promises).then(values => {
+                for (const val of values) {
+                    if (!!val) {
+                        matchedMembers.push(val);
+                    }
+                } 
+                resolve(matchedMembers);
             }).catch(reject);
         });
     }
@@ -380,21 +402,31 @@ class Bot {
         });
 
         client.on("messageReactionAdd", (messageReaction, user) => {
-            this.executeCustomActions('messageReactionAdd', {
-                guild: messageReaction.message.guild,
-                memberUser: <any>user,
-                reaction: messageReaction,
-                message: messageReaction.message
+            this.findMembersForUser(user, [messageReaction.message.guild]).then(members => {
+                if (!!members) {
+                    let firstMember = members[0];
+                    this.executeCustomActions('messageReactionAdd', {
+                        guild: messageReaction.message.guild,
+                        memberUser: <any>firstMember,
+                        reaction: messageReaction,
+                        message: messageReaction.message
+                    });
+                }
             });
             this.logMessage('messageReactionAdd', `<@${user.id}> (${user.tag}) has reacted with ${messageReaction.emoji.url} to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
         });
 
         client.on("messageReactionRemove", (messageReaction, user) => {
-            this.executeCustomActions('messageReactionRemove', {
-                guild: messageReaction.message.guild,
-                memberUser: <any>user,
-                reaction: messageReaction,
-                message: messageReaction.message
+            this.findMembersForUser(user, [messageReaction.message.guild]).then(members => {
+                if (!!members) {
+                    let firstMember = members[0];
+                    this.executeCustomActions('messageReactionRemove', {
+                        guild: messageReaction.message.guild,
+                        memberUser: <any>firstMember,
+                        reaction: messageReaction,
+                        message: messageReaction.message
+                    });
+                }
             });
             this.logMessage('messageReactionRemove', `<@${user.id}> (${user.tag}) has removed reaction ${messageReaction.emoji.url} to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
         });
