@@ -35,6 +35,7 @@ export default class EventActioner {
         interpreter.setProperty(globalObject, 'toggleRoleById', interpreter.createNativeFunction(functions.toggleRoleById));
         interpreter.setProperty(globalObject, 'messageChannelById', interpreter.createNativeFunction(functions.messageChannelById));
         interpreter.setProperty(globalObject, 'hasRoleById', interpreter.createNativeFunction(functions.hasRoleById));
+        interpreter.setProperty(globalObject, 'removeReactionByEmojiName', interpreter.createNativeFunction(functions.removeReactionByEmojiName));
        
         // There will always be a guild and log.
         interpreter.setProperty(globalObject, 'guild', interpreter.nativeToPseudo(copyGuild));
@@ -75,6 +76,7 @@ class InterpreterFunctions {
         this.toggleRoleById = this.toggleRoleById.bind(this);
         this.messageChannelById = this.messageChannelById.bind(this);
         this.hasRoleById = this.hasRoleById.bind(this);
+        this.removeReactionByEmojiName = this.removeReactionByEmojiName.bind(this);
     }
 
     public toggleRoleById(id) {
@@ -101,6 +103,28 @@ class InterpreterFunctions {
         if (!!channel) {
             channel.send(message);
         }
+    }
+
+    public removeReactionByEmojiName(nameOrEmoji) {
+        if (!this.options.message || !this.options.message.reactions || !(<any>this.options.memberUser).user) {
+            return false;
+        }
+
+        const user = (<any>this.options.memberUser).user;
+        const reactionsToMessage = this.options.message.reactions.cache;
+
+        // Find the reactions where the name is the same and the users contains our user.
+        const reactions = reactionsToMessage.filter(reaction => reaction.emoji.name == nameOrEmoji && 
+            reaction.users.cache.some(u => u.id === user.id));
+
+        // Only remove if there's some.
+        if (reactions.array().length > 0) {
+            reactions.forEach(reaction => {
+                reaction.remove(user);
+            });
+            return true;
+        }
+        return false;
     }
     
     private static toggleRole(guild: Guild, roleId: string, memberUser: GuildMember | User, add: boolean) {
