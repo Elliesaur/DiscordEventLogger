@@ -1,0 +1,32 @@
+{
+  "name": "discordeventlogger",
+  "version": "1.0.0",
+  "description": "Event logger for Discord",
+  "main": "./dist/index.js",
+  "dependencies": {
+    "@types/mongodb": "^3.5.2",
+    "discord-logs": "^1.7.4",
+    "discord.js": "^12.0.1",
+    "mongodb": "^3.5.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Elliesaur/DiscordEventLogger.git"
+  },
+  "keywords": [
+    "discord",
+    "event",
+    "log",
+    "data"
+  ],
+  "author": "Elliesaur",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Elliesaur/DiscordEventLogger/issues"
+  },
+  "homepage": "https://github.com/Elliesaur/DiscordEventLogger#readme"
+}

@@ -17,6 +17,7 @@ import logs from 'discord-logs';
 import Config from '../Config';
 import GuildEventConfig from '../GuildEventConfig';
 import EventActioner, { InterpreterOptions } from './EventAction';
+import { ConfigDatabase } from './ConfigDatabase';
 
 const client = new Client();
 logs(client);
@@ -37,13 +38,18 @@ class Bot {
     }
 
     private logMessage(event: string, message: string, guild: Guild) {
-        const guildConfig = GuildEventConfig.find(config => config.id === guild.id);
-        if (!!guildConfig && guildConfig.events.includes(event)) {
-            const channel: TextChannel = < TextChannel > guild.channels.cache.find(channel => channel.id === guildConfig.logChannelId);
-            if (!!channel) {
-                channel.send(message);
+        ConfigDatabase.getGuildEvents(guild).then(events => {
+            if (events.includes(event)) {
+                ConfigDatabase.getOrAddGuild(guild).then(guildConfig => {
+                    if (!!guildConfig) {
+                        const channel: TextChannel = <TextChannel> guild.channels.cache.find(channel => channel.id === guildConfig.logChannelId);
+                        if (!!channel) {
+                            channel.send(message);
+                        }
+                    }
+                });
             }
-        }
+        });
     }
 
     private logMessageToMultiple(event: string, message: string, guilds: Guild[]) {
@@ -74,13 +80,12 @@ class Bot {
     }
 
     private executeCustomActions(event: string, options: InterpreterOptions) {
-        const guildConfig = GuildEventConfig.find(config => config.id === options.guild.id);
-        if (!!guildConfig && !!guildConfig.eventActions) {
-            const action = guildConfig.eventActions.find(action => action.eventName == event);
-            if (!!action) {
-                EventActioner.interpretJs(action.actionCode, options)
-            }
-        }
+        // Simply lookup the database and send actions.
+        ConfigDatabase.getGuildEventActionsForEvent(options.guild, event).then(actions => {
+            actions.forEach(act => {
+                EventActioner.interpretJs(act.actionCode, options)
+            });
+        });
     }
 
     private executeMultipleCustomActions(event: string, guilds: Guild[], options: InterpreterOptions) {
