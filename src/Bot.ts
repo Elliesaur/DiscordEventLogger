@@ -12,6 +12,7 @@ import {
     VoiceChannel,
     VoiceState,
     TextChannel,
+    Constants,
 } from 'discord.js';
 import logs from 'discord-logs';
 import Config from '../Config';
@@ -19,7 +20,7 @@ import EventActioner, { InterpreterOptions } from './EventAction';
 import { ConfigDatabase, GuildEventAction } from './ConfigDatabase';
 import { ObjectId } from 'mongodb';
 
-const client = new Client();
+const client = new Client({ partials: Object.values(Constants.PartialTypes)  });
 const commands = ['events', 'listevents', 'addevents', 'removeevents', 'deleteevents', 
 'addeventaction', 'removeeventaction', 'listeventactions', 'eventactions'];
 
@@ -211,7 +212,11 @@ class Bot {
             this.logMessage('unhandledGuildUpdate', "Guild '" + oldGuild.name + "' was edited but the changes were not known", oldGuild);
         });
 
-        client.on("messagePinned", (message: Message) => {
+        client.on("messagePinned", async (message: Message) => {
+
+            // Fetch the full message if partial.
+            if (message.partial) await message.fetch();
+
             this.executeCustomActions('messagePinned', {
                 guild: message.guild,
                 message: message,
@@ -222,7 +227,11 @@ class Bot {
             this.logMessage('messagePinned', `Message https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id} has been pinned to ${channelName}: \`\`\`${this.safe(message.cleanContent)}\`\`\``, message.guild);
         });
 
-        client.on("messageContentEdited", (message: Message, oldContent: string, newContent: string) => {
+        client.on("messageContentEdited", async (message: Message, oldContent: string, newContent: string) => {
+            
+            // Fetch the full message if partial.
+            if (message.partial) await message.fetch();
+
             this.executeCustomActions('messageContentEdited', {
                 guild: message.guild,
                 message: message,
@@ -232,7 +241,12 @@ class Bot {
             this.logMessage('messageContentEdited', `Message https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id} has been edited from \`\`\`${this.safe(oldContent)}\`\`\` to \`\`\`${this.safe(newContent)}\`\`\``, message.guild);
         });
 
-        client.on("unhandledMessageUpdate", (oldMessage: Message, newMessage: Message) => {
+        client.on("unhandledMessageUpdate", async (oldMessage: Message, newMessage: Message) => {
+            
+            // Fetch the full message if partial.
+            if (oldMessage.partial) await oldMessage.fetch();
+            if (newMessage.partial) await newMessage.fetch();
+
             this.executeCustomActions('unhandledMessageUpdate', {
                 guild: newMessage.guild,
                 message: newMessage,
@@ -403,7 +417,13 @@ class Bot {
             this.logMessage('guildMemberRemove', `<@${member.user.id}> (${member.user.tag}) has left/been kicked or banned`, member.guild);
         });
 
-        client.on("messageReactionAdd", (messageReaction, user) => {
+        client.on("messageReactionAdd", async (messageReaction, user) => {
+
+            if (messageReaction.partial) await messageReaction.fetch();
+            
+            // Fetch the full message associated with the reaction.
+            if (messageReaction.message.partial) await messageReaction.message.fetch();
+
             this.findMembersForUser(user, [messageReaction.message.guild]).then(members => {
                 if (!!members) {
                     let firstMember = members[0];
@@ -419,7 +439,13 @@ class Bot {
             this.logMessage('messageReactionAdd', `<@${user.id}> (${user.tag}) has reacted with ${messageReaction.emoji.name} (${messageReaction.emoji.url}) to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
         });
 
-        client.on("messageReactionRemove", (messageReaction, user) => {
+        client.on("messageReactionRemove", async (messageReaction, user) => {
+
+            if (messageReaction.partial) await messageReaction.fetch();
+
+            // Fetch the full message associated with the reaction.
+            if (messageReaction.message.partial) await messageReaction.message.fetch();
+
             this.findMembersForUser(user, [messageReaction.message.guild]).then(members => {
                 if (!!members) {
                     let firstMember = members[0];
@@ -435,7 +461,11 @@ class Bot {
             this.logMessage('messageReactionRemove', `<@${user.id}> (${user.tag}) has removed reaction ${messageReaction.emoji.name} (${messageReaction.emoji.url}) to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
         });
 
-        client.on("messageReactionRemoveAll", (message: Message) => {
+        client.on("messageReactionRemoveAll", async (message: Message) => {
+
+            // Fetch the full message.
+            if (message.partial) await message.fetch();
+
             this.executeCustomActions('messageReactionRemoveAll', {
                 guild: message.guild,
                 memberUser: message.member,
@@ -444,7 +474,11 @@ class Bot {
             this.logMessage('messageReactionRemoveAll', `Message https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id} has had all reactions removed`, message.guild);
         });
 
-        client.on("messageDelete", (message) => {
+        client.on("messageDelete", async (message) => {
+
+            // Fetch the full message if partial.
+            if (message.partial) await message.fetch();
+
             const hasAttachment = message.attachments.size > 0;
             let attachmentUrl = '';
             if (hasAttachment) {
@@ -461,7 +495,7 @@ class Bot {
         });
 
         client.on("messageDeleteBulk", (messages) => {
-            this.logMessage('messageDeleteBulk', `${messages.keys.length} messages were deleted.`, messages.first().guild);
+            this.logMessage('messageDeleteBulk', `${messages.size} messages were deleted.`, messages.first().guild);
         });
 
         client.on("guildCreate", guild => {
@@ -479,6 +513,9 @@ class Bot {
         });
 
         client.on("message", async message => { 
+
+            // Fetch the full message if partial.
+            if (message.partial) await message.fetch();
 
             // Skip itself, do not allow it to process its own messages.
             if (message.author.id === client.user.id) return;
