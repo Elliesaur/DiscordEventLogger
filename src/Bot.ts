@@ -629,15 +629,28 @@ ${events.join('\n').trim()}
                 if (command === 'listeventactions' || command === 'eventactions') {
                     ConfigDatabase.getGuildEventActions(message.guild).then(actions => {
                         let formattedActions = `Event Actions in Place: `;
+                        let messageQueue = [];
                         for (const act of actions) {
-                            formattedActions += `
+                            const textToAdd = `
 \`\`\`
 Identifier: ${act.id.toHexString()}
 Event: ${this.safe(act.event)}
 Code: ${this.safe(act.actionCode)}
 \`\`\``;
+                            if ((formattedActions + textToAdd).length >= 2000) {
+                                messageQueue.push(formattedActions);
+                                formattedActions = `Event Actions in Place: `;
+                            }
+                            formattedActions += textToAdd;
                         }
-                        message.reply(formattedActions);
+
+                        messageQueue.push(formattedActions);
+
+                        for (const msg of messageQueue) {
+                            if (msg !== '') {
+                                message.reply(msg);
+                            }
+                        }
                     });
                 }
             });
