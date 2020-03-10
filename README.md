@@ -8,6 +8,7 @@ Event Logger for Discord with custom actions (in JS) on event triggers
 - Change the details of Config.ts to suit
 - Install node modules - `npm install`
 - Run typescript compiler - `tsc`
+- Copy acorn.js and interpreter.js to the ./dist/ directory
 - Start with node - `node ./dist/index.js`
 
 # Usage
