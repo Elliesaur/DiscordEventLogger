@@ -141,7 +141,7 @@ class InterpreterFunctions {
         
         // Find the reactions where the name is the same and the users contains our user.
         const reactions = reactionsToMessage.filter(reaction => reaction.emoji.name == nameOrEmoji && 
-            reaction.users.cache.some(u => u.id === user.id));
+            reaction.users.cache.has(user.id));
 
         // Only remove if there's some.
         if (reactions.array().length > 0) {
