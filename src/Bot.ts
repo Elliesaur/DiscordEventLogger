@@ -87,19 +87,18 @@ class Bot {
     private findMembersForUser(user: any, guilds: Guild[]) {
         return new Promise((resolve, reject) => {
             let matchedMembers = [];
-            const guilds = client.guilds.cache;
             const promises = [];
     
-            for (const guild of guilds) {
-                promises.push(guild[1].members.fetch(user.id))
-            }
+            guilds.forEach(guild => {
+                promises.push(guild.members.fetch(user.id))
+            });
             
             Promise.all(promises).then(values => {
-                for (const val of values) {
-                    if (!!val) {
+                values.forEach(val => {
+                    if (val !== undefined) {
                         matchedMembers.push(val);
                     }
-                } 
+                });
                 resolve(matchedMembers);
             }).catch(reject);
         });

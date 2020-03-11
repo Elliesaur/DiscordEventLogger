@@ -138,7 +138,7 @@ class InterpreterFunctions {
 
         const user = (<any>this.options.memberUser).user;
         const reactionsToMessage = this.options.message.reactions.cache;
-
+        
         // Find the reactions where the name is the same and the users contains our user.
         const reactions = reactionsToMessage.filter(reaction => reaction.emoji.name == nameOrEmoji && 
             reaction.users.cache.some(u => u.id === user.id));
