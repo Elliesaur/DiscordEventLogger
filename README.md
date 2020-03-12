@@ -197,5 +197,7 @@ The functions available in the JS Interpreter include those listed in [Interpret
 The custom global variables will depend on what event was fired.
 For a complete list of when each variable appears check out this [InterpreterOptions](https://github.com/Elliesaur/DiscordEventLogger/blob/20cb45af81c238af3f4c7e63fef2e690b54e3f88/src/EventAction.ts#L169) interface.
 
+Global variables are discord.js objects but have been stripped of all nested objects and arrays to support JS-Interpreter.
 
+Only the top level properties that are not objects or arrays are kept when copying the discord.js object into the global object.
 
