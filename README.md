@@ -1,5 +1,14 @@
 # DiscordEventLogger
-Event Logger for Discord with custom actions (in JS) on event triggers
+Event Logger for Discord with custom actions (in JS) on event triggers.
+
+Aims to provide more information than the Audit Log and allows you to respond with multiple custom actions when an event occurs.
+
+Some examples:
+- Add a new role when a user joins
+- Remove a role when a user changes nicknames
+- Message a channel when someone joins a specific voice channel
+- Add roles on reactions to messages
+- Create a bot in the bot, with the event "message" you can listen for new messages
 
 # Installation
 - Install mongodb server community edition
