@@ -10,6 +10,12 @@ Some examples:
 - Add roles on reactions to messages
 - Create a bot in the bot, with the event "message" you can listen for new messages
 
+# Invite Link
+If you'd like to use the bot how it is, without customising it feel free to [click here to invite it to your server](https://discordapp.com/oauth2/authorize?client_id=685372647403814932&scope=bot&permissions=268815360).
+
+It requires several permissions, the biggest being managing roles. You are free to remove any that you think are too dangerous. 
+Note that the bot will not be able to function entirely if you do remove them.
+
 # Installation
 - Install mongodb server community edition
 - Clone repo
