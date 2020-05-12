@@ -17,12 +17,13 @@ import {
 import logs from 'discord-logs';
 import Config from '../Config';
 import EventActioner, { InterpreterOptions } from './EventAction';
-import { ConfigDatabase, GuildEventAction } from './ConfigDatabase';
+import { ConfigDatabase, GuildEventAction, GuildLogChannel } from './ConfigDatabase';
 import { ObjectId } from 'mongodb';
 
 const client = new Client({ partials: Object.values(Constants.PartialTypes)  });
 const commands = ['events', 'listevents', 'addevents', 'removeevents', 'deleteevents', 
-'addeventaction', 'removeeventaction', 'listeventactions', 'eventactions'];
+'addeventaction', 'removeeventaction', 'listeventactions', 'eventactions', 'logchannels', 
+'listlogchannels', 'addlogchannels', 'removelogchannels', 'deletelogchannels'];
 
 logs(client);
 
@@ -45,11 +46,25 @@ class Bot {
     private logMessage(event: string, message: string, guild: Guild) {
         ConfigDatabase.getGuildEvents(guild).then(events => {
             if (events.includes(event)) {
-                ConfigDatabase.getOrAddGuild(guild).then(guildConfig => {
+                ConfigDatabase.getOrAddGuild(guild).then(async guildConfig => {
                     if (!!guildConfig) {
-                        const channel: TextChannel = <TextChannel> guild.channels.cache.find(channel => channel.id === guildConfig.logChannelId);
-                        if (!!channel) {
-                            channel.send(message);
+
+                        let channels: TextChannel[] = [];
+                        if (guildConfig.logChannels) {
+                            const channelIds = guildConfig.logChannels.filter(x => x.event === event);
+                            channels = channelIds.map(c => {
+                                return <TextChannel>guild.channels.cache.find(channel => channel.id == c.channelId);
+                            });
+                        }
+
+                        // Fallback is always the default log channel.
+                        if (channels.length === 0) {
+                            const channel: TextChannel = <TextChannel> guild.channels.cache.find(channel => channel.id === guildConfig.logChannelId);
+                            if (!!channel) {
+                                await channel.send(message);
+                            }
+                        } else {
+                            channels.forEach(async c => await c.send(message));
                         }
                     }
                 });
@@ -133,7 +148,8 @@ class Bot {
             this.logMessage('unhandledGuildChannelUpdate', "Channel '" + oldChannel.id + "' was edited but discord-logs couldn't find what was updated...", oldChannel.guild);
         });
 
-        client.on("guildMemberBoost", (member: GuildMember) => {
+        client.on("guildMemberBoost", async (member: GuildMember) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('guildMemberBoost', {
                 guild: member.guild,
                 memberUser: member,
@@ -141,7 +157,8 @@ class Bot {
             this.logMessage('guildMemberBoost', `<@${member.user.id}> (${member.user.tag}) has started boosting ${member.guild.name}`, member.guild);
         });
 
-        client.on("guildMemberUnboost", (member: GuildMember) => {
+        client.on("guildMemberUnboost", async (member: GuildMember) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('guildMemberUnboost', {
                 guild: member.guild,
                 memberUser: member,
@@ -149,7 +166,8 @@ class Bot {
             this.logMessage('guildMemberUnboost', `<@${member.user.id}> (${member.user.tag}) has stopped boosting ${member.guild.name}...`, member.guild);
         });
 
-        client.on("guildMemberRoleAdd", (member: GuildMember, role: Role) => {
+        client.on("guildMemberRoleAdd", async (member: GuildMember, role: Role) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('guildMemberRoleAdd', {
                 guild: member.guild,
                 memberUser: member,
@@ -158,7 +176,8 @@ class Bot {
             this.logMessage('guildMemberRoleAdd', `<@${member.user.id}> (${member.user.tag}) acquired the role: ${role.name}`, member.guild);
         });
 
-        client.on("guildMemberRoleRemove", (member: GuildMember, role: Role) => {
+        client.on("guildMemberRoleRemove", async (member: GuildMember, role: Role) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('guildMemberRoleRemove', {
                 guild: member.guild,
                 memberUser: member,
@@ -167,7 +186,8 @@ class Bot {
             this.logMessage('guildMemberRoleRemove', `<@${member.user.id}> (${member.user.tag}) lost the role: ${role.name}`, member.guild);
         });
 
-        client.on("guildMemberNicknameUpdate", (member: GuildMember, oldNickname: string, newNickname: string) => {
+        client.on("guildMemberNicknameUpdate", async (member: GuildMember, oldNickname: string, newNickname: string) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('guildMemberNicknameUpdate', {
                 guild: member.guild,
                 memberUser: member,
@@ -175,7 +195,9 @@ class Bot {
             this.logMessage('guildMemberNicknameUpdate', `<@${member.user.id}> (${member.user.tag})'s nickname was ${oldNickname} and is now ${newNickname}`, member.guild);
         });
 
-        client.on("unhandledGuildMemberUpdate", (oldMember: GuildMember, newMember: GuildMember) => {
+        client.on("unhandledGuildMemberUpdate", async (oldMember: GuildMember, newMember: GuildMember) => {
+            if (oldMember.partial) await oldMember.fetch();
+            if (newMember.partial) await newMember.fetch();
             this.executeCustomActions('unhandledGuildMemberUpdate', {
                 guild: newMember.guild,
                 memberUser: newMember
@@ -215,6 +237,7 @@ class Bot {
 
             // Fetch the full message if partial.
             if (message.partial) await message.fetch();
+            if (message.member.partial) await message.member.fetch();
 
             this.executeCustomActions('messagePinned', {
                 guild: message.guild,
@@ -230,6 +253,7 @@ class Bot {
             
             // Fetch the full message if partial.
             if (message.partial) await message.fetch();
+            if (message.member.partial) await message.member.fetch();
 
             this.executeCustomActions('messageContentEdited', {
                 guild: message.guild,
@@ -245,7 +269,8 @@ class Bot {
             // Fetch the full message if partial.
             if (oldMessage.partial) await oldMessage.fetch();
             if (newMessage.partial) await newMessage.fetch();
-
+            if (oldMessage.member.partial) await oldMessage.member.fetch();
+            if (newMessage.member.partial) await newMessage.member.fetch();
             this.executeCustomActions('unhandledMessageUpdate', {
                 guild: newMessage.guild,
                 message: newMessage,
@@ -255,7 +280,9 @@ class Bot {
             this.logMessage('unhandledMessageUpdate', `Message https://discordapp.com/channels/${oldMessage.guild.id}/${oldMessage.channel.id}/${oldMessage.id} was updated but the changes were not known` , oldMessage.guild);
         });
 
-        client.on("guildMemberOffline", (member: GuildMember, oldStatus: Status) => {
+        client.on("guildMemberOffline", async (member: GuildMember, oldStatus: Status) => {
+            if (member.partial) await member.fetch();
+
             this.executeCustomActions('guildMemberOffline', {
                 guild: member.guild,
                 memberUser: member,
@@ -263,7 +290,9 @@ class Bot {
             this.logMessage('guildMemberOffline', `<@${member.user.id}> (${member.user.tag}) became offline`, member.guild);
         });
 
-        client.on("guildMemberOnline", (member: GuildMember, newStatus: Status) => {
+        client.on("guildMemberOnline", async (member: GuildMember, newStatus: Status) => {
+            if (member.partial) await member.fetch();
+
             this.executeCustomActions('guildMemberOnline', {
                 guild: member.guild,
                 memberUser: member,
@@ -271,7 +300,8 @@ class Bot {
             this.logMessage('guildMemberOnline', `<@${member.user.id}> (${member.user.tag}) was offline and is now ${newStatus}`, member.guild);
         });
 
-        client.on("unhandledPresenceUpdate", (oldPresence: Presence, newPresence: Presence) => {
+        client.on("unhandledPresenceUpdate", async (oldPresence: Presence, newPresence: Presence) => {
+            if (newPresence.member.partial) await newPresence.member.fetch();
             this.executeCustomActions('unhandledPresenceUpdate', {
                 guild: newPresence.guild,
                 memberUser: newPresence.member,
@@ -319,7 +349,8 @@ class Bot {
             });
         });
 
-        client.on("voiceChannelJoin", (member: GuildMember, channel: VoiceChannel) => {
+        client.on("voiceChannelJoin", async (member: GuildMember, channel: VoiceChannel) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('voiceChannelJoin', {
                 guild: member.guild,
                 memberUser: member,
@@ -328,7 +359,8 @@ class Bot {
             this.logMessage('voiceChannelJoin', `<@${member.user.id}> (${member.user.tag}) joined voice channel '${channel.name}'`, member.guild);
         });
 
-        client.on("voiceChannelLeave", (member: GuildMember, channel: VoiceChannel) => {
+        client.on("voiceChannelLeave", async (member: GuildMember, channel: VoiceChannel) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('voiceChannelLeave', {
                 guild: member.guild,
                 memberUser: member,
@@ -337,7 +369,8 @@ class Bot {
             this.logMessage('voiceChannelLeave', `<@${member.user.id}> (${member.user.tag}) left voice channel '${channel.name}'`, member.guild);
         });
 
-        client.on("voiceChannelSwitch", (member: GuildMember, oldChannel: VoiceChannel, newChannel: VoiceChannel) => {
+        client.on("voiceChannelSwitch", async (member: GuildMember, oldChannel: VoiceChannel, newChannel: VoiceChannel) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('voiceChannelSwitch', {
                 guild: member.guild,
                 memberUser: member,
@@ -346,7 +379,8 @@ class Bot {
             this.logMessage('voiceChannelSwitch', `<@${member.user.id}> (${member.user.tag}) left voice channel '${oldChannel.name}' and joined voice channel '${newChannel.name}'`, member.guild);
         });
 
-        client.on("voiceChannelMute", (member: GuildMember, muteType: string) => {
+        client.on("voiceChannelMute", async (member: GuildMember, muteType: string) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('voiceChannelMute', {
                 guild: member.guild,
                 memberUser: member,
@@ -354,7 +388,8 @@ class Bot {
             this.logMessage('voiceChannelMute', `<@${member.user.id}> (${member.user.tag}) is now ${muteType}`, member.guild);
         });
 
-        client.on("voiceChannelDeaf", (member: GuildMember, deafType: string) => {
+        client.on("voiceChannelDeaf", async (member: GuildMember, deafType: string) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('voiceChannelDeaf', {
                 guild: member.guild,
                 memberUser: member,
@@ -362,7 +397,8 @@ class Bot {
             this.logMessage('voiceChannelDeaf', `<@${member.user.id}> (${member.user.tag}) is now ${deafType}`, member.guild);
         });
 
-        client.on("voiceChannelUnmute", (member: GuildMember, muteType: string) => {
+        client.on("voiceChannelUnmute", async (member: GuildMember, muteType: string) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('voiceChannelUnmute', {
                 guild: member.guild,
                 memberUser: member,
@@ -370,7 +406,8 @@ class Bot {
             this.logMessage('voiceChannelUnmute', `<@${member.user.id}> (${member.user.tag}) is now unmuted`, member.guild);
         });
 
-        client.on("voiceChannelUndeaf", (member: GuildMember, deafType: string) => {
+        client.on("voiceChannelUndeaf", async (member: GuildMember, deafType: string) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('voiceChannelUndeaf', {
                 guild: member.guild,
                 memberUser: member,
@@ -378,7 +415,8 @@ class Bot {
             this.logMessage('voiceChannelUndeaf', `<@${member.user.id}> (${member.user.tag}) is now undeafened`, member.guild);
         });
 
-        client.on("voiceStreamingStart", (member: GuildMember, voiceChannel: VoiceChannel) => {
+        client.on("voiceStreamingStart", async (member: GuildMember, voiceChannel: VoiceChannel) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('voiceStreamingStart', {
                 guild: member.guild,
                 memberUser: member,
@@ -387,7 +425,8 @@ class Bot {
             this.logMessage('voiceStreamingStart',`<@${member.user.id}> (${member.user.tag}) started streaming in ${voiceChannel.name}`, member.guild);
         });
 
-        client.on("voiceStreamingStop", (member: GuildMember, voiceChannel: VoiceChannel) => {
+        client.on("voiceStreamingStop", async (member: GuildMember, voiceChannel: VoiceChannel) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('voiceStreamingStop', {
                 guild: member.guild,
                 memberUser: member,
@@ -396,11 +435,13 @@ class Bot {
             this.logMessage('voiceStreamingStop', `<@${member.user.id}> (${member.user.tag}) stopped streaming`, member.guild);
         });
 
-        client.on("unhandledVoiceStateUpdate", (oldState: VoiceState, newState: VoiceState) => {
-             this.logMessage('unhandledVoiceUpdate', `Voice state for member <@${oldState.member.user.id}> (${oldState.member.user.tag}) was updated but the changes were not known`, oldState.guild);
+        client.on("unhandledVoiceStateUpdate", async (oldState: VoiceState, newState: VoiceState) => {
+            if (oldState.member.partial) await oldState.member.fetch();
+            this.logMessage('unhandledVoiceUpdate', `Voice state for member <@${oldState.member.user.id}> (${oldState.member.user.tag}) was updated but the changes were not known`, oldState.guild);
         });
 
-        client.on("guildMemberAdd", (member) => {
+        client.on("guildMemberAdd", async (member: GuildMember) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('guildMemberAdd', {
                 guild: member.guild,
                 memberUser: <any>member,
@@ -408,7 +449,8 @@ class Bot {
             this.logMessage('guildMemberAdd', `<@${member.user.id}> (${member.user.tag}) has joined`, member.guild);
         });
 
-        client.on("guildMemberRemove", (member) => {
+        client.on("guildMemberRemove", async (member: GuildMember) => {
+            if (member.partial) await member.fetch();
             this.executeCustomActions('guildMemberRemove', {
                 guild: member.guild,
                 memberUser: <any>member,
@@ -477,6 +519,7 @@ class Bot {
 
             // Fetch the full message if partial.
             if (message.partial) await message.fetch();
+            if (message.member.partial) await message.member.fetch();
 
             const hasAttachment = message.attachments.size > 0;
             let attachmentUrl = '';
@@ -515,6 +558,7 @@ class Bot {
 
             // Fetch the full message if partial.
             if (message.partial) await message.fetch();
+            if (message.member.partial) await message.member.fetch();
 
             // Skip itself, do not allow it to process its own messages.
             if (message.author.id === client.user.id) return;
@@ -644,6 +688,72 @@ Code: ${this.safe(act.actionCode)}
                         }
 
                         messageQueue.push(formattedActions);
+
+                        for (const msg of messageQueue) {
+                            if (msg !== '') {
+                                message.reply(msg);
+                            }
+                        }
+                    });
+                }
+
+
+                if (command === 'addlogchannels' && args.length > 1 && message.mentions.channels.size > 0) {
+                    const eventName = args[0];
+                    const logChannels = message.mentions.channels.map(channel => {
+                        return {
+                            event: eventName,
+                            channelId: channel.id,
+                        };
+                    });
+                    
+                    ConfigDatabase.addGuildLogChannelsForEvent(message.guild, logChannels).then(result => {
+                        if (result.ok) {
+                            message.reply('Successfully added log channel redirects.');
+                        } else {
+                            message.reply('Failed to add log channel redirects.');
+                        }
+                    })
+                }
+
+                if ((command === 'removelogchannels' || command == 'deletelogchannels') && args.length > 0) {
+                    const objectIds = args.map(a => new ObjectId(a))
+                    ConfigDatabase.removeGuildLogChannels(message.guild, objectIds).then(result => {
+                        if (result.ok) {
+                            message.reply(`Successfully removed the selected log channel redirects.`)
+                        } else {
+                            message.reply('Failed to remove the selected log channel redirects.');
+                        }
+                    })
+                }
+
+                if (command === 'listlogchannels' || command === 'logchannels') {
+                    ConfigDatabase.getGuildLogChannels(message.guild).then(logChannels => {
+                        const modifiedLogChannels = logChannels.map(logChannel => {
+                            const channel = message.guild.channels.cache.find(c => c.id == logChannel.channelId);
+                            const channelName = !!channel ? `${channel.name} - ID: ${logChannel.channelId}` : `Unknown Channel - ID: ${logChannel.channelId}`;
+                            return {
+                                ...logChannel,
+                                channelName: channelName,
+                            };
+                        });
+                        let formattedLogChannels = `Log channel redirects in Place: `;
+                        let messageQueue = [];
+                        for (const act of modifiedLogChannels) {
+                            const textToAdd = `
+\`\`\`
+Identifier: ${act.id.toHexString()}
+Event: ${this.safe(act.event)}
+Log Channel: ${this.safe(act.channelName)}
+\`\`\``;
+                            if ((formattedLogChannels + textToAdd).length >= 2000) {
+                                messageQueue.push(formattedLogChannels);
+                                formattedLogChannels = `Log channel redirects in Place: `;
+                            }
+                            formattedLogChannels += textToAdd;
+                        }
+
+                        messageQueue.push(formattedLogChannels);
 
                         for (const msg of messageQueue) {
                             if (msg !== '') {

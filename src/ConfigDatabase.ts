@@ -16,14 +16,20 @@ class InternalConfigDatabase {
         this.getGuildEventActions = this.getGuildEventActions.bind(this);
         this.getGuildEventActionsForEvent = this.getGuildEventActionsForEvent.bind(this);
         this.getGuildEvents = this.getGuildEvents.bind(this);
-        this.removeGuildEventActionsById= this.removeGuildEventActionsById.bind(this);
-        this.removeGuildEventActions= this.removeGuildEventActions.bind(this);
-        this.removeGuildEvents = this.removeGuildEvents.bind(this);
+        this.removeGuildEventActionsById = this.removeGuildEventActionsById.bind(this);
+        this.removeGuildEventActions = this.removeGuildEventActions.bind(this);
+        this.removeGuildEventActionsById = this.removeGuildEventActionsById.bind(this);
         this.removeGuildEventsById = this.removeGuildEventsById.bind(this);
         this.getGuildEventsById = this.getGuildEventsById.bind(this);
         this.getGuildEventActionsForEventById = this.getGuildEventActionsForEventById.bind(this);
         this.getGuildEventActionsById = this.getGuildEventActionsById.bind(this);
         this.addGuildEventActionsForEventById = this.addGuildEventActionsForEventById.bind(this);
+        this.getGuildLogChannels = this.getGuildLogChannels.bind(this);
+        this.getGuildLogChannelsById = this.getGuildLogChannelsById.bind(this);
+        this.getGuildLogChannelsForEvent = this.getGuildLogChannelsForEvent.bind(this);
+        this.getGuildLogChannelsForEventById = this.getGuildLogChannelsForEventById.bind(this);
+        this.removeGuildLogChannels = this.removeGuildLogChannels.bind(this);
+        this.removeGuildLogChannelsById = this.removeGuildLogChannelsById.bind(this);
 
         MongoClient.connect(connectionUrl).then(a => {
             db = a.db(dbName);
@@ -57,7 +63,8 @@ class InternalConfigDatabase {
                     id: guildId,
                     logChannelId: '',
                     events: [],
-                    eventActions: []
+                    eventActions: [],
+                    logChannels: [],
                 }
             }, {
                 upsert: true,
@@ -261,6 +268,111 @@ class InternalConfigDatabase {
             return undefined;
         }
     }
+
+    public async getGuildLogChannelsForEvent(guild: Guild, event: string): Promise<GuildEventAction[]> {
+        return await this.getGuildLogChannelsForEventById(guild.id, event);
+    }
+
+    public async getGuildLogChannelsForEventById(guildId: string, event: string): Promise<GuildEventAction[]> {
+        const collection = db.collection('eventlogger');
+        try {
+            const guildConfig = await collection.findOne({ id: guildId });
+            if (guildConfig && guildConfig.logChannels) {
+                return guildConfig.logChannels.filter(x => x.event === event);
+            } else {
+                this.getOrAddGuildById(guildId).then(guildConfig => {
+                    if (guildConfig) {
+                        console.log('Initialized guild', guildId);
+                    }
+                    return [];
+                })
+            }
+            return [];
+        } catch (e) {
+            console.error('getGuildLogChannelsForEventById', e);
+            return [];
+        }
+    }
+
+    public async getGuildLogChannels(guild: Guild): Promise<GuildLogChannel[]> {
+        return await this.getGuildLogChannelsById(guild.id);
+    }
+
+    public async getGuildLogChannelsById(guildId: string): Promise<GuildLogChannel[]> {
+        const collection = db.collection('eventlogger');
+        try {
+            const guildConfig = await collection.findOne({ id: guildId });
+            if (guildConfig && guildConfig.logChannels) {
+                return guildConfig.logChannels;
+            } else {
+                this.getOrAddGuildById(guildId).then(guildConfig => {
+                    if (guildConfig) {
+                        console.log('Initialized guild', guildId);
+                    }
+                    return [];
+                })
+            }
+            return [];
+        } catch (e) {
+            console.error('getGuildLogChannelsById', e);
+            return [];
+        }
+    }
+    
+    public async addGuildLogChannelsForEvent(guild: Guild, newLogChannels: GuildLogChannel[]) {
+        return await this.addGuildLogChannelsForEventById(guild.id, newLogChannels);
+    }
+
+    public async addGuildLogChannelsForEventById(guildId: string, newLogChannels: GuildLogChannel[]) {
+        let modifiedLogChannels = newLogChannels
+            .map(act => {
+                return {
+                    ...act,
+                    id: new ObjectId()
+                }
+            });
+            
+
+        
+        const collection = db.collection('eventlogger');
+        try {
+            const v = await collection.findOneAndUpdate({ id: guildId }, {
+                $push: {
+                    logChannels: {
+                        $each: modifiedLogChannels
+                    }
+                }
+            });
+            
+            return v;
+        } catch (e) {
+            console.error('addGuildLogChannelsForEventById', e);
+            return undefined;
+        }
+    }
+
+    public async removeGuildLogChannels(guild: Guild, logChannelIds: ObjectId[]) {
+        return await this.removeGuildLogChannelsById(guild.id, logChannelIds);
+    }
+
+    public async removeGuildLogChannelsById(guildId: string, logChannelIds: ObjectId[]) {
+        const collection = db.collection('eventlogger');
+        try {
+            const v = await collection.findOneAndUpdate({ id: guildId }, {
+                $pull: {
+                    logChannels: {
+                        id: {
+                            $in: logChannelIds
+                        }
+                    }
+                }
+            });
+            return v;
+        } catch (e) {
+            console.error('removeGuildLogChannelsById', e);
+            return undefined;
+        }
+    }
 }
 
 export interface GuildEventAction {
@@ -269,11 +381,18 @@ export interface GuildEventAction {
     id?: ObjectId;
 }
 
+export interface GuildLogChannel {
+    event: string;
+    channelId: string;
+    id?: ObjectId;
+}
+
 export interface GuildConfig { 
     id: string;
     logChannelId: string;
     events: string[];
     eventActions: GuildEventAction[];
+    logChannels: GuildLogChannel[];
 }
 
 export const ConfigDatabase = new InternalConfigDatabase();
