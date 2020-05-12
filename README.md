@@ -32,6 +32,8 @@ All commands are case insensitive. Arguments to them are not.
 
 All commands excluding !SetLogChannel **must** be executed from the log channel.
 
+Log channel redirects further enhance the ability to log individual events to different channels (one event may have multiple logging channels).
+
 ---
 
 # Command Reference
@@ -186,7 +188,7 @@ Adds multiple log channel redirects for the specified event.
 - Event name
 - List of channel mentions
 #### Example
-User> !addEventAction messageContentEdited #test_log #test_log2 #testlog_3
+User> !addlogchannels messageContentEdited #test_log #test_log2 #testlog_3
 
 Bot> Successfully added log channel redirects.
 
@@ -198,7 +200,7 @@ Removes multiple unique log channel redirects given the id's from !LogChannels.
 #### Arguments
 - Log Channel Redirect Identifiers (from !LogChannels)
 #### Example
-User> !removeEventAction 5e6612673d41310651586001 5e6612673d41310651586002 5e6612673d41310651586003
+User> !removelogchannels 5e6612673d41310651586001 5e6612673d41310651586002 5e6612673d41310651586003
 
 Bot> Successfully removed the selected log channel redirects.
 
