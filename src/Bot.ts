@@ -24,6 +24,8 @@ const client = <any>new Client({ partials: Object.values(Constants.PartialTypes)
 const commands = ['events', 'listevents', 'addevents', 'removeevents', 'deleteevents', 
 'addeventaction', 'removeeventaction', 'listeventactions', 'eventactions', 'logchannels', 
 'listlogchannels', 'addlogchannels', 'removelogchannels', 'deletelogchannels'];
+const reflect = p => p.then(v => ({v, status: "fulfilled" }),
+                            e => ({e, status: "rejected" }));
 
 logs(client);
 
@@ -81,21 +83,25 @@ class Bot {
     private findGuildsForUser(user: User) : Promise<Guild[]> {
         return new Promise((resolve, reject) => {
             let matchedGuilds = [];
-            const guilds = client.guilds.cache;
+            const guilds = (<Client>client).guilds.cache;
             const promises = [];
     
             for (const guild of guilds) {
                 promises.push(guild[1].members.fetch(user.id))
             }
             
-            Promise.all(promises).then(values => {
-                for (const val of values) {
+            Promise.all(promises.map(reflect)).then(results => {
+                const success = results.filter(x => x.status === "fulfilled").map(x => x.v);
+                success.forEach(val => {
                     if (!!val) {
                         matchedGuilds.push(val.guild);
                     }
-                } 
+                }); 
                 resolve(matchedGuilds);
-            }).catch(reject);
+            }).catch(e => {
+                console.log('Could not complete finding guilds for a user', e);
+                //reject();
+            });
         });
     }
 
@@ -108,14 +114,18 @@ class Bot {
                 promises.push(guild.members.fetch(user.id))
             });
             
-            Promise.all(promises).then(values => {
-                values.forEach(val => {
+            Promise.all(promises.map(reflect)).then(results => {
+                const success = results.filter(x => x.status === "fulfilled").map(x => x.v);
+                success.forEach(val => {
                     if (val !== undefined) {
                         matchedMembers.push(val);
                     }
                 });
                 resolve(matchedMembers);
-            }).catch(reject);
+            }).catch(e => {
+                console.log('Could not complete finding members for a user', e);
+                //reject();
+            });
         });
     }
 
