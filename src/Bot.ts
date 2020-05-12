@@ -140,8 +140,8 @@ class Bot {
     
     public start() {
 
-        client.on("guildChannelPermissionsChanged", (channel: GuildChannel, oldPermissions: Permissions, newPermissions: Permissions) => {
-            this.logMessage('guildChannelPermissionsChanged', channel.name + "'s permissions changed!", channel.guild);
+        client.on("guildChannelPermissionsUpdate", (channel: GuildChannel, oldPermissions: Permissions, newPermissions: Permissions) => {
+            this.logMessage('guildChannelPermissionsUpdate', channel.name + "'s permissions changed!", channel.guild);
         });
 
         client.on("unhandledGuildChannelUpdate", (oldChannel: GuildChannel, newChannel: GuildChannel) => {
