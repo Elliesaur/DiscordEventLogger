@@ -20,7 +20,7 @@ import EventActioner, { InterpreterOptions } from './EventAction';
 import { ConfigDatabase, GuildEventAction, GuildLogChannel } from './ConfigDatabase';
 import { ObjectId } from 'mongodb';
 
-const client = new Client({ partials: Object.values(Constants.PartialTypes)  });
+const client = <any>new Client({ partials: Object.values(Constants.PartialTypes)  });
 const commands = ['events', 'listevents', 'addevents', 'removeevents', 'deleteevents', 
 'addeventaction', 'removeeventaction', 'listeventactions', 'eventactions', 'logchannels', 
 'listlogchannels', 'addlogchannels', 'removelogchannels', 'deletelogchannels'];
