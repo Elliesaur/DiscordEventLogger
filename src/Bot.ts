@@ -279,8 +279,6 @@ class Bot {
             // Fetch the full message if partial.
             if (oldMessage.partial) await oldMessage.fetch();
             if (newMessage.partial) await newMessage.fetch();
-            if (oldMessage.member.partial) await oldMessage.member.fetch();
-            if (newMessage.member.partial) await newMessage.member.fetch();
             this.executeCustomActions('unhandledMessageUpdate', {
                 guild: newMessage.guild,
                 message: newMessage,
@@ -311,7 +309,6 @@ class Bot {
         });
 
         client.on("unhandledPresenceUpdate", async (oldPresence: Presence, newPresence: Presence) => {
-            if (newPresence.member.partial) await newPresence.member.fetch();
             this.executeCustomActions('unhandledPresenceUpdate', {
                 guild: newPresence.guild,
                 memberUser: newPresence.member,
@@ -446,7 +443,6 @@ class Bot {
         });
 
         client.on("unhandledVoiceStateUpdate", async (oldState: VoiceState, newState: VoiceState) => {
-            if (oldState.member.partial) await oldState.member.fetch();
             this.logMessage('unhandledVoiceUpdate', `Voice state for member <@${oldState.member.user.id}> (${oldState.member.user.tag}) was updated but the changes were not known`, oldState.guild);
         });
 
