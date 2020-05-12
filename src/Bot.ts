@@ -247,7 +247,6 @@ class Bot {
 
             // Fetch the full message if partial.
             if (message.partial) await message.fetch();
-            if (message.member.partial) await message.member.fetch();
 
             this.executeCustomActions('messagePinned', {
                 guild: message.guild,
@@ -263,7 +262,6 @@ class Bot {
             
             // Fetch the full message if partial.
             if (message.partial) await message.fetch();
-            if (message.member.partial) await message.member.fetch();
 
             this.executeCustomActions('messageContentEdited', {
                 guild: message.guild,
@@ -468,9 +466,11 @@ class Bot {
 
             if (messageReaction.partial) await messageReaction.fetch();
             
-            // Fetch the full message associated with the reaction.
-            if (messageReaction.message.partial) await messageReaction.message.fetch();
-
+            if (!!messageReaction.message) {
+                // Fetch the full message associated with the reaction.
+                if (messageReaction.message.partial) await messageReaction.message.fetch();
+            }
+            
             this.findMembersForUser(user, [messageReaction.message.guild]).then(members => {
                 if (!!members) {
                     let firstMember = members[0];
@@ -490,8 +490,10 @@ class Bot {
 
             if (messageReaction.partial) await messageReaction.fetch();
 
-            // Fetch the full message associated with the reaction.
-            if (messageReaction.message.partial) await messageReaction.message.fetch();
+            if (!!messageReaction.message) {
+                // Fetch the full message associated with the reaction.
+                if (messageReaction.message.partial) await messageReaction.message.fetch();
+            }
 
             this.findMembersForUser(user, [messageReaction.message.guild]).then(members => {
                 if (!!members) {
@@ -510,6 +512,8 @@ class Bot {
 
         client.on("messageReactionRemoveAll", async (message: Message) => {
 
+            if (!!!message) return;
+            
             // Fetch the full message.
             if (message.partial) await message.fetch();
 
@@ -525,8 +529,7 @@ class Bot {
 
             // Fetch the full message if partial.
             if (message.partial) await message.fetch();
-            if (message.member.partial) await message.member.fetch();
-
+            
             const hasAttachment = message.attachments.size > 0;
             let attachmentUrl = '';
             if (hasAttachment) {
@@ -564,7 +567,6 @@ class Bot {
 
             // Fetch the full message if partial.
             if (message.partial) await message.fetch();
-            if (message.member.partial) await message.member.fetch();
 
             // Skip itself, do not allow it to process its own messages.
             if (message.author.id === client.user.id) return;
