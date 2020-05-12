@@ -1,5 +1,20 @@
 # DiscordEventLogger
-Event Logger for Discord with custom actions (in JS) on event triggers
+Event Logger for Discord with custom actions (in JS) on event triggers.
+
+Aims to provide more information than the Audit Log and allows you to respond with multiple custom actions when an event occurs.
+
+Some examples:
+- Add a new role when a user joins
+- Remove a role when a user changes nicknames
+- Message a channel when someone joins a specific voice channel
+- Add roles on reactions to messages
+- Create a bot in the bot, with the event "message" you can listen for new messages
+
+# Invite Link
+If you'd like to use the bot how it is, without customising it feel free to [click here to invite it to your server](https://discordapp.com/oauth2/authorize?client_id=685372647403814932&scope=bot&permissions=268815360).
+
+It requires several permissions, the biggest being managing roles. You are free to remove any that you think are too dangerous. 
+Note that the bot will not be able to function entirely if you do remove them.
 
 # Installation
 - Install mongodb server community edition
@@ -197,5 +212,7 @@ The functions available in the JS Interpreter include those listed in [Interpret
 The custom global variables will depend on what event was fired.
 For a complete list of when each variable appears check out this [InterpreterOptions](https://github.com/Elliesaur/DiscordEventLogger/blob/20cb45af81c238af3f4c7e63fef2e690b54e3f88/src/EventAction.ts#L169) interface.
 
+Global variables are discord.js objects but have been stripped of all nested objects and arrays to support JS-Interpreter.
 
+Only the top level properties that are not objects or arrays are kept when copying the discord.js object into the global object.
 
