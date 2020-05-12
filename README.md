@@ -152,6 +152,58 @@ Bot> Successfully removed an event action with identifier 5e6612673d413106515860
 
 ---
 
+### !LogChannels (!ListLogChannels)
+#### Description
+Lists all log channel redirects on the guild.
+
+When a redirect is in place it will not post to the default log channel.
+
+Each event can have multiple log channels that they post in.
+#### Arguments
+- None
+#### Example
+User> !LogChannels
+
+Bot> Log channel redirects in Place: 
+```
+Identifier: 5eba70865640a65be2a51ccd
+Event: messageReactionAdd
+Log Channel: another_reaction_log - ID: 53181564338605952
+```
+
+```
+Identifier: 5eba71026eadcf5cc27ssda
+Event: messageReactionAdd
+Log Channel: some_channel2 - ID: 74261227326558539
+```
+
+---
+
+### !AddLogChannels
+#### Description
+Adds multiple log channel redirects for the specified event.
+#### Arguments
+- Event name
+- List of channel mentions
+#### Example
+User> !addEventAction messageContentEdited #test_log #test_log2 #testlog_3
+
+Bot> Successfully added log channel redirects.
+
+---
+
+### !RemoveLogChannels (!DeleteLogChannels)
+#### Description
+Removes multiple unique log channel redirects given the id's from !LogChannels.
+#### Arguments
+- Log Channel Redirect Identifiers (from !LogChannels)
+#### Example
+User> !removeEventAction 5e6612673d41310651586001 5e6612673d41310651586002 5e6612673d41310651586003
+
+Bot> Successfully removed the selected log channel redirects.
+
+---
+
 # Events
 ```
 'guildChannelPermissionsChanged',
