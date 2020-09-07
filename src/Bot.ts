@@ -688,7 +688,7 @@ Identifier: ${act.id.toHexString()}
 Event: ${this.safe(act.event)}
 Code: ${this.safe(act.actionCode)}
 \`\`\``;
-                            if ((formattedActions + textToAdd).length >= 2000) {
+                            if ((formattedActions + textToAdd).length >= 1800) {
                                 messageQueue.push(formattedActions);
                                 formattedActions = `Event Actions in Place: `;
                             }
