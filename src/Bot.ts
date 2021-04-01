@@ -151,7 +151,7 @@ class Bot {
     public start() {
 
         client.on("guildChannelPermissionsUpdate", (channel: GuildChannel, oldPermissions: Permissions, newPermissions: Permissions) => {
-            this.logMessage('guildChannelPermissionsUpdate', channel.name + "'s permissions changed!", channel.guild);
+            this.logMessage('guildChannelPermissionsUpdate', this.safe(channel.name) + "'s permissions changed!", channel.guild);
         });
 
         client.on("unhandledGuildChannelUpdate", (oldChannel: GuildChannel, newChannel: GuildChannel) => {
@@ -164,7 +164,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('guildMemberBoost', `<@${member.user.id}> (${member.user.tag}) has started boosting ${member.guild.name}`, member.guild);
+            this.logMessage('guildMemberBoost', `<@${member.user.id}> (${this.safe(member.user.tag)}) has started boosting ${member.guild.name}`, member.guild);
         });
 
         client.on("guildMemberUnboost", async (member: GuildMember) => {
@@ -173,7 +173,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('guildMemberUnboost', `<@${member.user.id}> (${member.user.tag}) has stopped boosting ${member.guild.name}...`, member.guild);
+            this.logMessage('guildMemberUnboost', `<@${member.user.id}> (${this.safe(member.user.tag)}) has stopped boosting ${member.guild.name}...`, member.guild);
         });
 
         client.on("guildMemberRoleAdd", async (member: GuildMember, role: Role) => {
@@ -183,7 +183,7 @@ class Bot {
                 memberUser: member,
                 role: role,
             });
-            this.logMessage('guildMemberRoleAdd', `<@${member.user.id}> (${member.user.tag}) acquired the role: ${role.name}`, member.guild);
+            this.logMessage('guildMemberRoleAdd', `<@${member.user.id}> (${this.safe(member.user.tag)}) acquired the role: ${role.name}`, member.guild);
         });
 
         client.on("guildMemberRoleRemove", async (member: GuildMember, role: Role) => {
@@ -193,7 +193,7 @@ class Bot {
                 memberUser: member,
                 role: role,
             });
-            this.logMessage('guildMemberRoleRemove', `<@${member.user.id}> (${member.user.tag}) lost the role: ${role.name}`, member.guild);
+            this.logMessage('guildMemberRoleRemove', `<@${member.user.id}> (${this.safe(member.user.tag)}) lost the role: ${role.name}`, member.guild);
         });
 
         client.on("guildMemberNicknameUpdate", async (member: GuildMember, oldNickname: string, newNickname: string) => {
@@ -202,7 +202,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('guildMemberNicknameUpdate', `<@${member.user.id}> (${member.user.tag})'s nickname was ${oldNickname} and is now ${newNickname}`, member.guild);
+            this.logMessage('guildMemberNicknameUpdate', `<@${member.user.id}> (${this.safe(member.user.tag)})'s nickname was ${this.safe(oldNickname)} and is now ${this.safe(newNickname)}`, member.guild);
         });
 
         client.on("unhandledGuildMemberUpdate", async (oldMember: GuildMember, newMember: GuildMember) => {
@@ -212,35 +212,35 @@ class Bot {
                 guild: newMember.guild,
                 memberUser: newMember
             });
-            this.logMessage('unhandledGuildMemberUpdate', `<@${oldMember.user.id}> (${oldMember.user.tag}) was edited but the update was not known`, oldMember.guild);
+            this.logMessage('unhandledGuildMemberUpdate', `<@${oldMember.user.id}> (${this.safe(oldMember.user.tag)}) was edited but the update was not known`, oldMember.guild);
         });
 
         client.on("guildBoostLevelUp", (guild: Guild, oldLevel: number, newLevel: number) => {
-            this.logMessage('guildBoostLevelUp', guild.name + " reaches the boost level: " + newLevel, guild);
+            this.logMessage('guildBoostLevelUp', this.safe(guild.name) + " reaches the boost level: " + newLevel, guild);
         });
 
         client.on("guildBoostLevelDown", (guild: Guild, oldLevel: number, newLevel: number) => {
-            this.logMessage('guildBoostLevelDown', guild.name + " returned to the boost level: " + newLevel, guild);
+            this.logMessage('guildBoostLevelDown', this.safe(guild.name) + " returned to the boost level: " + newLevel, guild);
         });
 
         client.on("guildRegionUpdate", (guild: Guild, oldRegion: string, newRegion: string) => {
-            this.logMessage('guildRegionUpdate', guild.name + " region is now " + newRegion, guild);
+            this.logMessage('guildRegionUpdate', this.safe(guild.name) + " region is now " + newRegion, guild);
         });
 
         client.on("guildBannerAdd", (guild: Guild, bannerURL: string) => {
-            this.logMessage('guildBannerAdd', guild.name + " has a banner now!", guild);
+            this.logMessage('guildBannerAdd', this.safe(guild.name) + " has a banner now!", guild);
         });
 
         client.on("guildAfkChannelAdd", (guild: Guild, afkChannel: GuildChannel) => {
-            this.logMessage('guildAfkChannelAdd', guild.name + " has an AFK channel now!", guild);
+            this.logMessage('guildAfkChannelAdd', this.safe(guild.name) + " has an AFK channel now!", guild);
         });
 
         client.on("guildVanityURLAdd", (guild: Guild, vanityURL: string) => {
-            this.logMessage('guildVanityURLAdd', guild.name + " has added a vanity url : " + vanityURL, guild);
+            this.logMessage('guildVanityURLAdd', this.safe(guild.name) + " has added a vanity url : " + vanityURL, guild);
         });
 
         client.on("unhandledGuildUpdate", (oldGuild: Guild, newGuild: Guild) => {
-            this.logMessage('unhandledGuildUpdate', "Guild '" + oldGuild.name + "' was edited but the changes were not known", oldGuild);
+            this.logMessage('unhandledGuildUpdate', "Guild '" + this.safe(oldGuild.name) + "' was edited but the changes were not known", oldGuild);
         });
 
         client.on("messagePinned", async (message: Message) => {
@@ -255,7 +255,7 @@ class Bot {
                 memberUser: message.member
             });
             const channelName = ( < any > message.channel).name;
-            this.logMessage('messagePinned', `Message https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id} has been pinned to ${channelName}: \`\`\`${this.safe(message.cleanContent)}\`\`\``, message.guild);
+            this.logMessage('messagePinned', `Message https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id} has been pinned to ${this.safe(channelName)}: \`\`\`${this.safe(message.cleanContent)}\`\`\``, message.guild);
         });
 
         client.on("messageContentEdited", async (message: Message, oldContent: string, newContent: string) => {
@@ -293,7 +293,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('guildMemberOffline', `<@${member.user.id}> (${member.user.tag}) became offline`, member.guild);
+            this.logMessage('guildMemberOffline', `<@${member.user.id}> (${this.safe(member.user.tag)}) became offline`, member.guild);
         });
 
         client.on("guildMemberOnline", async (member: GuildMember, newStatus: Status) => {
@@ -303,7 +303,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('guildMemberOnline', `<@${member.user.id}> (${member.user.tag}) was offline and is now ${newStatus}`, member.guild);
+            this.logMessage('guildMemberOnline', `<@${member.user.id}> (${this.safe(member.user.tag)}) was offline and is now ${newStatus}`, member.guild);
         });
 
         client.on("unhandledPresenceUpdate", async (oldPresence: Presence, newPresence: Presence) => {
@@ -311,7 +311,7 @@ class Bot {
                 guild: newPresence.guild,
                 memberUser: newPresence.member,
             });
-            this.logMessage('unhandledPresenceUpdate', `Presence for member <@${oldPresence.user.id}> (${oldPresence.user.tag}) was updated but the changes were not known`, oldPresence.guild);
+            this.logMessage('unhandledPresenceUpdate', `Presence for member <@${oldPresence.user.id}> (${this.safe(oldPresence.user.tag)}) was updated but the changes were not known`, oldPresence.guild);
         });
 
         client.on("rolePositionUpdate", (role: Role, oldPosition: number, newPosition: number) => {
@@ -319,7 +319,7 @@ class Bot {
                 guild: role.guild,
                 role: role,
             });
-            this.logMessage('rolePositionUpdate', role.name + " was at position " + oldPosition + " and now is at position " + newPosition, role.guild);
+            this.logMessage('rolePositionUpdate', this.safe(role.name) + " was at position " + oldPosition + " and now is at position " + newPosition, role.guild);
         });
 
         client.on("unhandledRoleUpdate", (oldRole: Role, newRole: Role) => {
@@ -327,7 +327,7 @@ class Bot {
                 guild: newRole.guild,
                 role: newRole,
             });
-            this.logMessage('unhandledRoleUpdate', "Role '" + oldRole.name + "' was updated but the changes were not nknown", oldRole.guild);
+            this.logMessage('unhandledRoleUpdate', "Role '" + this.safe(oldRole.name) + "' was updated but the changes were not known", oldRole.guild);
         });
 
         client.on("userAvatarUpdate", (user: User, oldAvatarURL: string, newAvatarURL: string) => {
@@ -335,7 +335,7 @@ class Bot {
                 this.executeMultipleCustomActions('userAvatarUpdate', guilds, {
                     memberUser: user,
                 });
-                this.logMessageToMultiple('userAvatarUpdate', `<@${user.id}> (${user.tag}) avatar changed from ${oldAvatarURL} to ${newAvatarURL}`, guilds);
+                this.logMessageToMultiple('userAvatarUpdate', `<@${user.id}> (${this.safe(user.tag)}) avatar changed from ${oldAvatarURL} to ${newAvatarURL}`, guilds);
             })
         });
 
@@ -344,13 +344,13 @@ class Bot {
                 this.executeMultipleCustomActions('userUsernameUpdate', guilds, {
                     memberUser: user,
                 });
-                this.logMessageToMultiple('userUsernameUpdate', `<@${user.id}> (${user.tag}) username changed from '${oldUsername}' to '${newUsername}'`, guilds);
+                this.logMessageToMultiple('userUsernameUpdate', `<@${user.id}> (${this.safe(user.tag)}) username changed from '${this.safe(oldUsername)}' to '${this.safe(newUsername)}'`, guilds);
             });
         });
 
         client.on("unhandledUserUpdate", (oldUser: User, newUser: User) => {
             this.findGuildsForUser(newUser).then(guilds => {
-                this.logMessageToMultiple('unhandledUserUpdate', `User <@${newUser.id}> (${newUser.tag}) was updated but the changes were not known`, guilds);
+                this.logMessageToMultiple('unhandledUserUpdate', `User <@${newUser.id}> (${this.safe(newUser.tag)}) was updated but the changes were not known`, guilds);
             });
         });
 
@@ -361,7 +361,7 @@ class Bot {
                 memberUser: member,
                 channel: channel,
             });
-            this.logMessage('voiceChannelJoin', `<@${member.user.id}> (${member.user.tag}) joined voice channel '${channel.name}'`, member.guild);
+            this.logMessage('voiceChannelJoin', `<@${member.user.id}> (${this.safe(member.user.tag)}) joined voice channel '${this.safe(channel.name)}'`, member.guild);
         });
 
         client.on("voiceChannelLeave", async (member: GuildMember, channel: VoiceChannel) => {
@@ -371,7 +371,7 @@ class Bot {
                 memberUser: member,
                 channel: channel,
             });
-            this.logMessage('voiceChannelLeave', `<@${member.user.id}> (${member.user.tag}) left voice channel '${channel.name}'`, member.guild);
+            this.logMessage('voiceChannelLeave', `<@${member.user.id}> (${this.safe(member.user.tag)}) left voice channel '${this.safe(channel.name)}'`, member.guild);
         });
 
         client.on("voiceChannelSwitch", async (member: GuildMember, oldChannel: VoiceChannel, newChannel: VoiceChannel) => {
@@ -381,7 +381,7 @@ class Bot {
                 memberUser: member,
                 channel: newChannel,
             });
-            this.logMessage('voiceChannelSwitch', `<@${member.user.id}> (${member.user.tag}) left voice channel '${oldChannel.name}' and joined voice channel '${newChannel.name}'`, member.guild);
+            this.logMessage('voiceChannelSwitch', `<@${member.user.id}> (${this.safe(member.user.tag)}) left voice channel '${this.safe(oldChannel.name)}' and joined voice channel '${this.safe(newChannel.name)}'`, member.guild);
         });
 
         client.on("voiceChannelMute", async (member: GuildMember, muteType: string) => {
@@ -390,7 +390,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('voiceChannelMute', `<@${member.user.id}> (${member.user.tag}) is now ${muteType}`, member.guild);
+            this.logMessage('voiceChannelMute', `<@${member.user.id}> (${this.safe(member.user.tag)}) is now ${muteType}`, member.guild);
         });
 
         client.on("voiceChannelDeaf", async (member: GuildMember, deafType: string) => {
@@ -399,7 +399,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('voiceChannelDeaf', `<@${member.user.id}> (${member.user.tag}) is now ${deafType}`, member.guild);
+            this.logMessage('voiceChannelDeaf', `<@${member.user.id}> (${this.safe(member.user.tag)}) is now ${deafType}`, member.guild);
         });
 
         client.on("voiceChannelUnmute", async (member: GuildMember, muteType: string) => {
@@ -408,7 +408,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('voiceChannelUnmute', `<@${member.user.id}> (${member.user.tag}) is now unmuted`, member.guild);
+            this.logMessage('voiceChannelUnmute', `<@${member.user.id}> (${this.safe(member.user.tag)}) is now unmuted`, member.guild);
         });
 
         client.on("voiceChannelUndeaf", async (member: GuildMember, deafType: string) => {
@@ -417,7 +417,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('voiceChannelUndeaf', `<@${member.user.id}> (${member.user.tag}) is now undeafened`, member.guild);
+            this.logMessage('voiceChannelUndeaf', `<@${member.user.id}> (${this.safe(member.user.tag)}) is now undeafened`, member.guild);
         });
 
         client.on("voiceStreamingStart", async (member: GuildMember, voiceChannel: VoiceChannel) => {
@@ -427,7 +427,7 @@ class Bot {
                 memberUser: member,
                 channel: voiceChannel,
             });
-            this.logMessage('voiceStreamingStart',`<@${member.user.id}> (${member.user.tag}) started streaming in ${voiceChannel.name}`, member.guild);
+            this.logMessage('voiceStreamingStart',`<@${member.user.id}> (${this.safe(member.user.tag)}) started streaming in ${this.safe(voiceChannel.name)}`, member.guild);
         });
 
         client.on("voiceStreamingStop", async (member: GuildMember, voiceChannel: VoiceChannel) => {
@@ -437,7 +437,7 @@ class Bot {
                 memberUser: member,
                 channel: voiceChannel,
             });
-            this.logMessage('voiceStreamingStop', `<@${member.user.id}> (${member.user.tag}) stopped streaming`, member.guild);
+            this.logMessage('voiceStreamingStop', `<@${member.user.id}> (${this.safe(member.user.tag)}) stopped streaming`, member.guild);
         });
 
         client.on("unhandledVoiceStateUpdate", async (oldState: VoiceState, newState: VoiceState) => {
@@ -450,7 +450,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: <any>member,
             });
-            this.logMessage('guildMemberAdd', `<@${member.user.id}> (${member.user.tag}) has joined`, member.guild);
+            this.logMessage('guildMemberAdd', `<@${member.user.id}> (${this.safe(member.user.tag)}) has joined`, member.guild);
         });
 
         client.on("guildMemberRemove", async (member: GuildMember) => {
@@ -459,7 +459,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: <any>member,
             });
-            this.logMessage('guildMemberRemove', `<@${member.user.id}> (${member.user.tag}) has left/been kicked or banned`, member.guild);
+            this.logMessage('guildMemberRemove', `<@${member.user.id}> (${this.safe(member.user.tag)}) has left/been kicked or banned`, member.guild);
         });
 
         client.on("messageReactionAdd", async (messageReaction, user) => {
@@ -483,7 +483,7 @@ class Bot {
                     });
                 }
             });
-            this.logMessage('messageReactionAdd', `<@${user.id}> (${user.tag}) has reacted with ${messageReaction.emoji.name} (${messageReaction.emoji.url}) to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
+            this.logMessage('messageReactionAdd', `<@${user.id}> (${this.safe(user.tag)}) has reacted with ${messageReaction.emoji.name} (${messageReaction.emoji.url}) to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
         });
 
         client.on("messageReactionRemove", async (messageReaction, user) => {
@@ -507,7 +507,7 @@ class Bot {
                     });
                 }
             });
-            this.logMessage('messageReactionRemove', `<@${user.id}> (${user.tag}) has removed reaction ${messageReaction.emoji.name} (${messageReaction.emoji.url}) to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
+            this.logMessage('messageReactionRemove', `<@${user.id}> (${this.safe(user.tag)}) has removed reaction ${messageReaction.emoji.name} (${messageReaction.emoji.url}) to message https://discordapp.com/channels/${messageReaction.message.guild.id}/${messageReaction.message.channel.id}/${messageReaction.message.id} `, messageReaction.message.guild);
         });
 
         client.on("messageReactionRemoveAll", async (message: Message) => {
@@ -542,7 +542,7 @@ class Bot {
                 channel: message.channel,
                 memberUser: message.member
             });
-            this.logMessage('messageDelete', `<@${message.author.id}> (${message.author.tag})'s message \`\`\`${this.safe(message.cleanContent)}\`\`\` ${(hasAttachment ? ' with attachment ' + attachmentUrl : '')} from ${channelName} was deleted`, message.guild);
+            this.logMessage('messageDelete', `<@${message.author.id}> (${this.safe(message.author.tag)})'s message \`\`\`${this.safe(message.cleanContent)}\`\`\` ${(hasAttachment ? ' with attachment ' + attachmentUrl : '')} from ${channelName} was deleted`, message.guild);
         });
 
         client.on("messageDeleteBulk", (messages) => {
@@ -578,7 +578,7 @@ class Bot {
                 channel: message.channel,
                 memberUser: message.member
             });
-            this.logMessage('message', `<@${message.author.id}> (${message.author.tag}) posted message: \`\`\`${this.safe(message.cleanContent)}\`\`\``, message.guild);
+            this.logMessage('message', `<@${message.author.id}> (${this.safe(message.author.tag)}) posted message: \`\`\`${this.safe(message.cleanContent)}\`\`\``, message.guild);
         
             // Skip other bots now.
             if (message.author.bot) return;

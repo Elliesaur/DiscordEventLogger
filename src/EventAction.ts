@@ -2,6 +2,9 @@ import { Guild, GuildMember, User, TextChannel, GuildChannel } from "discord.js"
 global["acorn"] = require('../acorn');
 import JSInterpreter from '../interpreter';
 
+// Time to wait for script to run.
+const cancelAfterMs = 3000;
+
 export default class EventActioner {
 
     private static initFunction(interpreter, globalObject, functions: InterpreterFunctions) {
@@ -45,14 +48,24 @@ export default class EventActioner {
 
     static interpretJs(code: string, options: InterpreterOptions) {
 
-        var functions = new InterpreterFunctions(options);
+        let functions = new InterpreterFunctions(options);
 
         let interp = new JSInterpreter.Interpreter(code, (i, g) => EventActioner.initFunction(i, g, functions));
         
-        // Returns false if all good, true if there's async code.
-        if (interp.run()) {
-            console.error('Unexpected async function blocking call.', code);
-        }
+        let startTime = new Date().getTime();
+
+        function nextStep() {
+            if (new Date().getTime() - startTime > cancelAfterMs) {
+                console.log('Cancelled execution of event action (Timeout). ', code);
+                return;
+            }
+            if (interp.step()) {
+                setTimeout(nextStep, 0);
+            } else {
+                console.log('Execution of custom event action complete! ');
+            }
+        };
+        nextStep();
     }
     
     static copyTopLevelProperties(o: any) {
