@@ -52,6 +52,19 @@ Bot> Set the log channel to 123456789
 
 ---
 
+### !RemoveEventLogger
+#### Description
+Removes all data related to the current server Event Logger is in. Event Logger will then attempt to leave the server by itself. 
+ALL data on your database will be removed for the guild. If you are using our server, all data will be removed from our database regarding your guild.
+Only an ADMINISTRATOR can execute this command. 
+It may be executed from any channel.
+#### Arguments
+- none
+#### Example
+User> !removeeventlogger
+
+---
+
 ### !Events (!ListEvents)
 #### Description
 Lists all events currently monitored by the bot (and logging).

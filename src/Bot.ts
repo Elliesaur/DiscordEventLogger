@@ -605,7 +605,22 @@ class Bot {
                         }
                     });
                 }
-            } else if (!commands.includes(command)) {
+            }
+            else if (command === 'removeeventlogger') {
+                if (!message.member.hasPermission("ADMINISTRATOR")) {
+                    return;
+                }
+                ConfigDatabase.removeGuild(message.guild).then(async res => {
+                    await message.reply(`Successfully removed all data related to this server from my database. I'll now leave the server. Thanks for having me!`);
+                    message.guild.leave().then(left => {
+                        console.log(`Left guild gracefully - ${message.guild.name}`);
+                    }).catch(async err => {
+                        console.error(`Failed to leave guild gracefully - ${message.guild.name}`);
+                        await message.reply(`Unfortunately I couldn't leave by myself. You may kick me.`);
+                    });
+                });
+            }
+            else if (!commands.includes(command)) {
                 return;
             }
 

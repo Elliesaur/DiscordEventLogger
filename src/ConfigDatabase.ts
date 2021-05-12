@@ -77,6 +77,20 @@ class InternalConfigDatabase {
         }
     }
 
+    public async removeGuild(guild: Guild) {
+        return await this.removeGuildById(guild.id);
+    }
+
+    public async removeGuildById(guildId: string) {
+        const collection = db.collection('eventlogger');
+        try {
+            return await collection.findOneAndDelete({ id: guildId });
+        } catch (e) {
+            console.error('removeGuildById', e);
+            return undefined;
+        }
+    }
+
     public async updateGuildLogChannel(guild: Guild, channelId: string) {
        return await this.updateGuildLogChannelById(guild.id, channelId);
     }
