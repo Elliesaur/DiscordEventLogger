@@ -42,7 +42,10 @@ class Bot {
     }
 
     private safe(str: string) {
-        return str.replace(/`/g, '');
+        if (str !== undefined && str !== null) {
+            return str.replace(/`/g, '');
+        }
+        return '';
     }
 
     private logMessage(event: string, message: string, guild: Guild) {
