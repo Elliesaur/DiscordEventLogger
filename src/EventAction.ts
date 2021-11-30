@@ -47,25 +47,32 @@ export default class EventActioner {
 
 
     static interpretJs(code: string, options: InterpreterOptions) {
+        try {
+            let functions = new InterpreterFunctions(options);
 
-        let functions = new InterpreterFunctions(options);
+            let interp = new JSInterpreter.Interpreter(code, (i, g) => EventActioner.initFunction(i, g, functions));
+            
+            let startTime = new Date().getTime();
 
-        let interp = new JSInterpreter.Interpreter(code, (i, g) => EventActioner.initFunction(i, g, functions));
-        
-        let startTime = new Date().getTime();
-
-        function nextStep() {
-            if (new Date().getTime() - startTime > cancelAfterMs) {
-                console.log('Cancelled execution of event action (Timeout). ', code);
-                return;
-            }
-            if (interp.step()) {
-                setTimeout(nextStep, 0);
-            } else {
-                console.log('Execution of custom event action complete! ');
-            }
-        };
-        nextStep();
+            function nextStep() {
+                if (new Date().getTime() - startTime > cancelAfterMs) {
+                    console.log('Cancelled execution of event action (Timeout). ', code);
+                    return;
+                }
+                try {
+                    if (interp.step()) {
+                        setTimeout(nextStep, 0);
+                    } else {
+                        console.log('Execution of custom event action complete! ');
+                    }
+                } catch (e) {
+                    console.log('Error in step of interpreter', e)
+                }
+            };
+            nextStep();
+        } catch (e) {
+            console.log('Error running interpreter', e)
+        }
     }
     
     static copyTopLevelProperties(o: any) {
