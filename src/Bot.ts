@@ -211,7 +211,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('guildMemberNicknameUpdate', `<@${member.user.id}> (${this.safe(member.user.tag)})'s nickname was \` ${this.safe(oldNickname)} \` and is now \` ${this.safe(newNickname)} \``, member.guild);
+            this.logMessage('guildMemberNicknameUpdate', `<@${member.user.id}> (${this.safe(member.user.tag)})'s nickname was \` ${this.safe(oldNickname) === '' ? ' <none> ' : this.safe(oldNickname)} \` and is now \` ${this.safe(newNickname) === '' ? ' <none> ' : this.safe(newNickname)} \``, member.guild);
         });
 
         client.on("unhandledGuildMemberUpdate", async (oldMember: GuildMember, newMember: GuildMember) => {
