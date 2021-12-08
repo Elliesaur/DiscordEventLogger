@@ -174,7 +174,7 @@ class InterpreterFunctions {
     }
     
     private static toggleRole(guild: Guild, roleId: string, memberUser: GuildMember | User, add: boolean) {
-        guild.roles.fetch(roleId, true).then(role => {
+        guild.roles.fetch(roleId, { force: true }).then(role => {
             if (!!memberUser) {
                 if (add) {
                     (<GuildMember>memberUser).roles.add(role);
