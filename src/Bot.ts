@@ -12,15 +12,18 @@ import {
     VoiceChannel,
     VoiceState,
     TextChannel,
-    Constants,
+    Intents,
 } from 'discord.js';
-import logs from 'discord-logs';
+import logs from 'discord-logs'
 import Config from '../Config';
 import EventActioner, { InterpreterOptions } from './EventAction';
 import { ConfigDatabase, GuildEventAction, GuildLogChannel } from './ConfigDatabase';
 import { ObjectId } from 'mongodb';
 
-const client = <any>new Client({ partials: Object.values(Constants.PartialTypes)  });
+const client = new Client({ intents: [ 
+    Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES,
+    Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_MEMBERS] 
+});
 const commands = ['events', 'listevents', 'addevents', 'removeevents', 'deleteevents', 
 'addeventaction', 'removeeventaction', 'listeventactions', 'eventactions', 'logchannels', 
 'listlogchannels', 'addlogchannels', 'removelogchannels', 'deletelogchannels'];
@@ -205,7 +208,7 @@ class Bot {
                 guild: member.guild,
                 memberUser: member,
             });
-            this.logMessage('guildMemberNicknameUpdate', `<@${member.user.id}> (${this.safe(member.user.tag)})'s nickname was ${this.safe(oldNickname)} and is now ${this.safe(newNickname)}`, member.guild);
+            this.logMessage('guildMemberNicknameUpdate', `<@${member.user.id}> (${this.safe(member.user.tag)})'s nickname was \`${this.safe(oldNickname)}\` and is now \`${this.safe(newNickname)}\``, member.guild);
         });
 
         client.on("unhandledGuildMemberUpdate", async (oldMember: GuildMember, newMember: GuildMember) => {
@@ -566,7 +569,7 @@ class Bot {
             client.user.setActivity(`Serving ${client.guilds.cache.size} servers`);
         });
 
-        client.on("message", async message => { 
+        client.on("messageCreate", async message => { 
 
             // Fetch the full message if partial.
             if (message.partial) await message.fetch();
@@ -575,6 +578,12 @@ class Bot {
             if (message.author.id === client.user.id) return;
 
             // First of all give the details to custom actions and log message.
+            this.executeCustomActions('messageCreated', {
+                guild: message.guild,
+                message: message,
+                channel: message.channel,
+                memberUser: message.member
+            });
             this.executeCustomActions('message', {
                 guild: message.guild,
                 message: message,
@@ -594,7 +603,7 @@ class Bot {
 
             
             if (command === 'setlogchannel') {
-                if (!message.member.hasPermission("ADMINISTRATOR")) {
+                if (!message.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) {
                     return;
                 }
                 let channelMentions = message.mentions.channels;
@@ -610,7 +619,7 @@ class Bot {
                 }
             }
             else if (command === 'removeeventlogger') {
-                if (!message.member.hasPermission("ADMINISTRATOR")) {
+                if (!message.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) {
                     return;
                 }
                 ConfigDatabase.removeGuild(message.guild).then(async res => {
@@ -793,7 +802,7 @@ Log Channel: ${this.safe(act.channelName)}
 
         client.on('ready', () => {
             console.log(`Bot has started, with ${client.users.cache.size} users in cache, in ${client.channels.cache.size} cached channels of ${client.guilds.cache.size} cached guilds.`); 
-            client.user.setActivity(`Serving ${client.guilds.cache.size} servers`);
+            client.user.setActivity(`serving ${client.guilds.cache.size} servers`);
             console.log(`Logged in as ${client.user.tag}!`);
         });
 
