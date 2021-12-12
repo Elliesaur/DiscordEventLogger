@@ -39,6 +39,8 @@ export default class EventActioner {
         interpreter.setProperty(globalObject, 'messageChannelById', interpreter.createNativeFunction(functions.messageChannelById));
         interpreter.setProperty(globalObject, 'hasRoleById', interpreter.createNativeFunction(functions.hasRoleById));
         interpreter.setProperty(globalObject, 'removeReactionByEmojiName', interpreter.createNativeFunction(functions.removeReactionByEmojiName));
+        interpreter.setProperty(globalObject, 'deleteCurrentMessage', interpreter.createNativeFunction(functions.deleteCurrentMessage));
+        interpreter.setProperty(globalObject, 'deleteMessageById', interpreter.createNativeFunction(functions.deleteMessageById));
        
         // There will always be a guild and log.
         interpreter.setProperty(globalObject, 'guild', interpreter.nativeToPseudo(copyGuild));
@@ -97,6 +99,8 @@ class InterpreterFunctions {
         this.messageChannelById = this.messageChannelById.bind(this);
         this.hasRoleById = this.hasRoleById.bind(this);
         this.removeReactionByEmojiName = this.removeReactionByEmojiName.bind(this);
+        this.deleteCurrentMessage = this.deleteCurrentMessage.bind(this);
+        this.deleteMessageById = this.deleteMessageById.bind(this);
     }
 
     /**
@@ -147,6 +151,39 @@ class InterpreterFunctions {
     }
 
     /**
+     * Deletes a message by the channel and message ID.
+     * @param channelId Channel ID as a string or number.
+     * @param messageId Message ID as a string or number.
+     * @returns True if deleted, false if params wrong or channel is not text channel.
+     */
+    public deleteMessageById(channelId: string | number, messageId: string | number) {
+        if (!this.options.guild) {
+            return false;
+        }
+        this.options.guild.channels.fetch(channelId.toString()).then(channel => {
+            if (!channel.isText()) {
+                return false;
+            }
+            const textChan = <TextChannel>channel;
+            textChan.messages.delete(messageId.toString())
+            return true;
+        });
+    }
+
+    /**
+     * Deletes the current message, works only for instances where message is set in options.
+     * 
+     * @returns False if params missing, true otherwise.
+     */
+    public deleteCurrentMessage() {
+        if (!this.options.guild || !this.options.message) {
+            return false;
+        }
+
+        this.options.message.delete();
+        return true;
+    }
+    /**
      * Removes a reaction to the message by the user that the reaction add/remove event was fired from.
      * This function should only be used in reaction-based events.
      * @param nameOrEmoji The emoji name for custom emojis or the literal emoji character for regular emojis.
@@ -184,6 +221,8 @@ class InterpreterFunctions {
             }
         }).catch(() => console.log('No role', roleId));
     }
+
+   
 }
 
 export interface InterpreterOptions {
