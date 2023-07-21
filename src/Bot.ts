@@ -23,11 +23,11 @@ import { ConfigDatabase, GuildEventAction, GuildLogChannel } from './ConfigDatab
 import { ObjectId } from 'mongodb';
 
 const client = new Client({ intents: [ 
-    GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildPresences, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessageReactions, 
     GatewayIntentBits.GuildEmojisAndStickers, GatewayIntentBits.GuildModeration, GatewayIntentBits.GuildIntegrations
 ], 
-    partials: [Partials.Channel, Partials.Channel, Partials.Reaction, Partials.GuildMember, Partials.User]
+    partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.GuildMember, Partials.User]
 });
 const commands = ['events', 'listevents', 'addevents', 'removeevents', 'deleteevents', 
 'addeventaction', 'removeeventaction', 'listeventactions', 'eventactions', 'logchannels', 
