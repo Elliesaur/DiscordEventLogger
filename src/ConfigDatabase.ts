@@ -1,6 +1,6 @@
 import { Guild } from "discord.js";
 import { MongoClient, ObjectId } from "mongodb";
-const connectionUrl = "mongodb://localhost:27017/";
+const connectionUrl = "mongodb://127.0.0.1:27017/";
 const dbName = "eventlogger";
 export let db = undefined;
 class InternalConfigDatabase {
