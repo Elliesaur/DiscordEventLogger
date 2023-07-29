@@ -1,4 +1,4 @@
-import { Guild, GuildMember, User, TextChannel, GuildChannel } from "discord.js";
+import { Guild, GuildMember, User, TextChannel, GuildChannel, ChannelType } from "discord.js";
 global["acorn"] = require('../acorn');
 import JSInterpreter from '../interpreter';
 
@@ -161,7 +161,7 @@ class InterpreterFunctions {
             return false;
         }
         this.options.guild.channels.fetch(channelId.toString()).then(channel => {
-            if (!channel.isText()) {
+            if (channel.type != ChannelType.GuildText) {
                 return false;
             }
             const textChan = <TextChannel>channel;

@@ -12,7 +12,9 @@ import {
     VoiceChannel,
     VoiceState,
     TextChannel,
-    Intents,
+    GatewayIntentBits, 
+    Partials,
+    PermissionFlagsBits
 } from 'discord.js';
 import logs from 'discord-logs'
 import Config from '../Config';
@@ -21,11 +23,11 @@ import { ConfigDatabase, GuildEventAction, GuildLogChannel } from './ConfigDatab
 import { ObjectId } from 'mongodb';
 
 const client = new Client({ intents: [ 
-    Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES,
-    Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, 
-    Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS, Intents.FLAGS.GUILD_BANS, Intents.FLAGS.GUILD_INTEGRATIONS
+    GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildPresences, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessageReactions, 
+    GatewayIntentBits.GuildEmojisAndStickers, GatewayIntentBits.GuildModeration, GatewayIntentBits.GuildIntegrations
 ], 
-    partials: ['MESSAGE', 'CHANNEL', 'REACTION', 'GUILD_MEMBER', 'USER'],
+    partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.GuildMember, Partials.User]
 });
 const commands = ['events', 'listevents', 'addevents', 'removeevents', 'deleteevents', 
 'addeventaction', 'removeeventaction', 'listeventactions', 'eventactions', 'logchannels', 
@@ -580,21 +582,23 @@ class Bot {
             // Skip itself, do not allow it to process its own messages.
             if (message.author.id === client.user.id) return;
 
-            // First of all give the details to custom actions and log message.
-            this.executeCustomActions('messageCreated', {
-                guild: message.guild,
-                message: message,
-                channel: message.channel,
-                memberUser: message.member
-            });
-            this.executeCustomActions('message', {
-                guild: message.guild,
-                message: message,
-                channel: message.channel,
-                memberUser: message.member
-            });
-            this.logMessage('message', `<@${message.author.id}> (${this.safe(message.author.tag)}) posted message: \`\`\`${this.safe(message.cleanContent)}\`\`\``, message.guild);
-        
+            if (this.safe(message.content).length > 0) {
+                // First of all give the details to custom actions and log message.
+                this.executeCustomActions('messageCreated', {
+                    guild: message.guild,
+                    message: message,
+                    channel: message.channel,
+                    memberUser: message.member
+                });
+                this.executeCustomActions('message', {
+                    guild: message.guild,
+                    message: message,
+                    channel: message.channel,
+                    memberUser: message.member
+                });
+                this.logMessage('message', `${this.safe(message.author.tag)} ${message.author.id} posted message in <#${message.channel.id}>: \`\`\`${this.safe(message.content)}\`\`\``, message.guild);
+            }
+            
             // Skip other bots now.
             if (message.author.bot) return;
 
@@ -606,7 +610,7 @@ class Bot {
 
             
             if (command === 'setlogchannel') {
-                if (!message.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) {
+                if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
                     return;
                 }
                 let channelMentions = message.mentions.channels;
@@ -622,7 +626,7 @@ class Bot {
                 }
             }
             else if (command === 'removeeventlogger') {
-                if (!message.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) {
+                if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
                     return;
                 }
                 ConfigDatabase.removeGuild(message.guild).then(async res => {
